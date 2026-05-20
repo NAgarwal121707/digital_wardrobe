@@ -1634,3 +1634,213 @@ body.auth-page {
         font-size: 0.95rem;
     }
 }
+
+/* =========================
+   FINAL MOBILE UI FIX
+   paste at END of CSS file
+========================= */
+
+@media (max-width: 720px) {
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  .dashboard-page,
+  .theme-boutique {
+    min-height: 100dvh;
+  }
+
+  .wardrobe-shell {
+    width: 100%;
+    min-height: 100dvh;
+    padding: 70px 10px 12px;
+    margin: 0;
+    gap: 12px;
+  }
+
+  .wardrobe-main {
+    width: 100%;
+    min-height: calc(100dvh - 82px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wardrobe-intro-card {
+    margin-bottom: 12px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .wardrobe-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .wardrobe-dashboard-grid,
+  .grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 10px;
+    padding-bottom: 16px;
+  }
+
+  .card {
+    min-height: 100%;
+    border-radius: 16px;
+  }
+
+  .card-image,
+  .card-others {
+    height: 170px;
+  }
+
+  .wardrobe-item-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card-body {
+    padding: 11px;
+  }
+
+  .card-title-row {
+    gap: 6px;
+  }
+
+  .card-title-row h3 {
+    font-size: 0.95rem;
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    min-height: 23px;
+    padding: 0 8px;
+  }
+
+  .item-color-text {
+    font-size: 0.78rem;
+    margin-bottom: 8px;
+  }
+
+  .actions {
+    margin-top: 8px;
+  }
+
+  .action-btn span {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Add/Edit page full mobile space */
+  .add-item-page {
+    width: 100%;
+    min-height: 100dvh;
+    padding: 10px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .add-item-topbar {
+    margin-bottom: 10px;
+  }
+
+  .add-item-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .add-item-preview-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .add-item-preview-card h1 {
+    font-size: 1.55rem;
+  }
+
+  .add-item-preview-card p {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+  }
+
+  .add-item-form-card {
+    flex: 1;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .separate-add-form {
+    gap: 12px;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    min-height: 48px;
+    border-radius: 12px;
+  }
+
+  .wardrobe-submit-btn {
+    min-height: 52px;
+    margin-top: 4px;
+    border-radius: 14px;
+  }
+
+  /* Floating add button for mobile */
+  .wardrobe-main-actions {
+    position: fixed;
+    right: 16px;
+    bottom: 18px;
+    z-index: 70;
+  }
+
+  .wardrobe-main-actions .add-category-btn,
+  .wardrobe-main-actions .wardrobe-dark-btn {
+    width: 54px;
+    height: 54px;
+    min-height: 54px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 0;
+  }
+
+  .wardrobe-main-actions .add-category-btn::before,
+  .wardrobe-main-actions .wardrobe-dark-btn::before {
+    content: "+";
+    font-size: 2rem;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 390px) {
+  .wardrobe-dashboard-grid,
+  .grid {
+    gap: 8px;
+  }
+
+  .card-image,
+  .card-others {
+    height: 150px;
+  }
+
+  .card-body {
+    padding: 9px;
+  }
+
+  .card-title-row h3 {
+    font-size: 0.85rem;
+  }
+}
