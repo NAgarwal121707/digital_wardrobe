@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Clothing Item | Digital Wardrobe</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="theme-boutique">
+
+<main class="add-item-page">
+
+    <header class="add-item-topbar">
+        <a href="{% url 'dashboard' %}" class="wardrobe-brand">
+            <span>DW</span>
+            <div>
+                <strong>Digital Wardrobe</strong>
+                <small>Back to closet</small>
+            </div>
+        </a>
+
+        <a href="{% url 'dashboard' %}" class="wardrobe-dark-btn">Back to Dashboard</a>
+    </header>
+
+    {% if messages %}
+        <section class="wardrobe-messages">
+            {% for message in messages %}
+                <div class="wardrobe-message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="add-item-layout">
+
+        <div class="add-item-preview-card">
+            <p class="wardrobe-label">New Item</p>
+            <h1>Add to your wardrobe</h1>
+            <p>
+                Upload a clothing image and describe it with a name, custom category, and color.
+            </p>
+
+            <div class="form-closet-illustration" aria-hidden="true">
+                <div class="form-closet-rail"></div>
+                <div class="form-cloth one"></div>
+                <div class="form-cloth two"></div>
+                <div class="form-cloth three"></div>
+            </div>
+        </div>
+
+        <div class="add-item-form-card">
+            <h2>Clothing Details</h2>
+
+            <form method="post" enctype="multipart/form-data" class="separate-add-form">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+                    <label for="id_name">Item Name</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_category">Category</label>
+                    {{ form.category }}
+                    {{ form.category.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_color">Color</label>
+                    {{ form.color }}
+                    {{ form.color.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_image">Image</label>
+                    {{ form.image }}
+                    {{ form.image.errors }}
+                </div>
+
+                <button type="submit" class="wardrobe-submit-btn">Save Clothing Item</button>
+            </form>
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+</html>

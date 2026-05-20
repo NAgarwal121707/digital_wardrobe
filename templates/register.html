@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register | Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="register-page">
+
+<main class="auth-shell">
+    <section class="auth-card auth-card-wide">
+
+
+        <div class="auth-heading">
+            <h1>Create your account</h1>
+            <p>Add clothes, upload images, and manage your wardrobe from one simple dashboard.</p>
+        </div>
+
+        <form method="post" class="modern-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="form-field">
+                    <label>{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="primary-button">Create Account</button>
+        </form>
+
+        <p class="switch-link">
+            Already have an account?
+            <a href="{% url 'login' %}">Login</a>
+        </p>
+    </section>
+</main>
+
+</body>
+</html>

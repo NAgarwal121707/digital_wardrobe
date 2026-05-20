@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Category | Digital Wardrobe</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="theme-boutique">
+
+<main class="add-item-page">
+
+    <header class="add-item-topbar">
+        <a href="{% url 'dashboard' %}" class="wardrobe-brand">
+            <span>DW</span>
+            <div>
+                <strong>Digital Wardrobe</strong>
+                <small>Back to closet</small>
+            </div>
+        </a>
+
+        <a href="{% url 'dashboard' %}" class="wardrobe-dark-btn">Back to Dashboard</a>
+    </header>
+
+    {% if messages %}
+        <section class="wardrobe-messages">
+            {% for message in messages %}
+                <div class="wardrobe-message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="add-item-layout">
+
+        <div class="add-item-preview-card">
+            <p class="wardrobe-label">Edit Category</p>
+            <h1>Rename category</h1>
+            <p>
+                This will update the category name for all clothing items inside this category.
+            </p>
+        </div>
+
+        <div class="add-item-form-card">
+            <h2>Edit Category</h2>
+
+            <form method="post" class="separate-add-form">
+                {% csrf_token %}
+
+                <div class="form-field">
+                    <label for="id_category">Category Name</label>
+                    <input
+                        type="text"
+                        id="id_category"
+                        name="category"
+                        class="form-control"
+                        value="{{ category_name }}"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="wardrobe-submit-btn">Update Category</button>
+            </form>
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+</html>

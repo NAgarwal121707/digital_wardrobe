@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login | Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="login-page">
+
+<main class="login-card">
+
+    <div class="auth-brand">
+        <span>DW</span>
+        <div>
+            <strong>Digital Wardrobe</strong>
+            <small>Organise your closet</small>
+        </div>
+    </div>
+
+    {% if form.non_field_errors %}
+        <div class="form-errors">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="form-field">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+            {{ form.password.errors }}
+        </div>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p class="auth-helper-link">
+        <a href="{% url 'password_reset' %}">Forgot password?</a>
+    </p>
+
+    <p>
+        Don’t have an account?
+        <a href="{% url 'register' %}">Create account</a>
+    </p>
+
+</main>
+
+</body>
+</html>

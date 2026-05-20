@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Clothing Item | Digital Wardrobe</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="theme-boutique">
+
+<main class="add-item-page">
+
+    <header class="add-item-topbar">
+        <a href="{% url 'dashboard' %}" class="wardrobe-brand">
+            <span>DW</span>
+            <div>
+                <strong>Digital Wardrobe</strong>
+                <small>Back to closet</small>
+            </div>
+        </a>
+
+        <a href="{% url 'dashboard' %}" class="wardrobe-dark-btn">Back to Dashboard</a>
+    </header>
+
+    <section class="add-item-layout">
+
+        <div class="add-item-preview-card">
+            <p class="wardrobe-label">Delete Item</p>
+            <h1>Are you sure?</h1>
+            <p>
+                This will permanently delete this clothing item from your wardrobe.
+            </p>
+
+            {% if clothing_item.image %}
+                <img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}" class="wardrobe-edit-preview">
+            {% endif %}
+        </div>
+
+        <div class="add-item-form-card">
+            <h2>Delete "{{ clothing_item.name }}"?</h2>
+
+            <p>
+                Category: <strong>{{ clothing_item.category }}</strong>
+            </p>
+
+            <p>
+                Color: <strong>{{ clothing_item.color }}</strong>
+            </p>
+
+            <form method="post" class="separate-add-form">
+                {% csrf_token %}
+
+                <button type="submit" class="wardrobe-submit-btn">
+                    Yes, Delete Item
+                </button>
+
+                <a href="{% url 'dashboard' %}" class="wardrobe-dark-btn">
+                    Cancel
+                </a>
+            </form>
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+</html>

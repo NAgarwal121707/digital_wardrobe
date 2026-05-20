@@ -1,0 +1,287 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="dashboard-page">
+
+<main class="wardrobe-shell">
+
+    <button type="button" class="sidebar-toggle" id="sidebarToggle">
+        ☰
+    </button>
+
+    <aside class="wardrobe-sidebar" id="wardrobeSidebar">
+
+        <section class="sidebar-profile-card">
+            <button type="button" class="profile-trigger" id="profileTrigger">
+                <span class="profile-avatar">
+                    {{ request.user.email|first|upper }}
+                </span>
+
+                <div>
+                    <strong>Profile</strong>
+                    <small>View account</small>
+                </div>
+
+                <span class="profile-arrow">⌄</span>
+            </button>
+
+            <div class="profile-dropdown" id="profileDropdown">
+                <p>Hi,</p>
+                <strong>{{ request.user.email }}</strong>
+                <a href="{% url 'logout' %}" class="sidebar-logout-btn">Logout</a>
+            </div>
+        </section>
+
+        <section class="sidebar-summary-card">
+            <p class="sidebar-section-label">Wardrobe Summary</p>
+
+            <div class="sidebar-stats-row">
+                <div>
+                    <span>📂</span>
+                    <strong>{{ total_categories }}</strong>
+                    <small>Categories</small>
+                </div>
+
+                <div>
+                    <span>👕</span>
+                    <strong>{{ total_items }}</strong>
+                    <small>Items</small>
+                </div>
+            </div>
+        </section>
+
+        <section class="sidebar-category-card">
+            <div class="sidebar-section-heading">
+                <p class="sidebar-section-label">Categories</p>
+                <a href="{% url 'add_clothing_item' %}" class="sidebar-add-mini">+</a>
+            </div>
+
+            <button type="button" class="sidebar-category-btn active" data-category="all">
+                <span>All Items</span>
+                <small>{{ total_items }}</small>
+            </button>
+
+            {% for category in categories %}
+                <button type="button" class="sidebar-category-btn" data-category="{{ category.category|lower }}">
+                    <span>{{ category.category }}</span>
+                    <small>{{ category.item_count }}</small>
+                </button>
+            {% empty %}
+                <p class="sidebar-empty-text">No categories yet.</p>
+            {% endfor %}
+        </section>
+
+    </aside>
+
+    <section class="wardrobe-main">
+
+        <header class="wardrobe-main-header">
+            <div class="wardrobe-heading-row">
+                <h1>Digital Wardrobe</h1>
+                <span></span>
+            </div>
+
+            <div class="wardrobe-main-actions">
+                <a href="{% url 'add_clothing_item' %}" class="add-category-btn">+ Add Item</a>
+            </div>
+        </header>
+
+        {% if messages %}
+            <section class="dashboard-messages">
+                {% for message in messages %}
+                    <div class="dashboard-message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+        <section class="wardrobe-intro-card">
+            <div>
+                <p class="wardrobe-label">Your Closet</p>
+                <h2 id="activeCategoryTitle">All Wardrobe Items</h2>
+                <p>
+                    View your saved clothes, filter by category, and manage your wardrobe easily.
+                </p>
+            </div>
+        </section>
+        
+        <section class="wardrobe-toolbar">
+            <div class="wardrobe-search-box">
+                <span>🔍</span>
+                <input
+                    type="search"
+                    id="wardrobeSearchInput"
+                    placeholder="Search by name, category, or color..."
+                >
+            </div>
+
+            <p class="visible-items-count" id="visibleItemsCount">
+                Showing {{ total_items }} item(s)
+            </p>
+        </section>
+
+
+
+        <div class="no-filter-results" id="noFilterResults">
+            <h3>No matching items found</h3>
+            <p>Try another search word or choose a different category.</p>
+        </div>
+
+        <section class="grid wardrobe-dashboard-grid">
+
+            {% for item in clothing_items %}
+                <article class="card wardrobe-card" data-category="{{ item.category|lower }}" data-search="{{ item.name|lower }} {{ item.category|lower }} {{ item.color|lower }}">
+                    <div class="card-image card-others {% if item.image %}has-uploaded-image{% endif %}">
+                        {% if item.image %}
+                            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="wardrobe-item-image">
+                        {% else %}
+                            <div class="fashion-shape others-shape"></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body">
+                        <div class="card-title-row">
+                            <h3>{{ item.name }}</h3>
+                            <span class="badge purple-badge">
+                                {{ item.category }}
+                            </span>
+                        </div>
+
+                        <p class="item-color-text">
+                            Color: {{ item.color }}
+                        </p>
+
+                        <hr>
+
+                        <div class="actions">
+                            <a href="{% url 'edit_clothing_item' item.id %}" class="action-btn edit">
+                                <span>✎</span>
+                                <small>Edit</small>
+                            </a>
+
+                            <a href="{% url 'delete_clothing_item' item.id %}" class="action-btn delete">
+                                <span>🗑</span>
+                                <small>Delete</small>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty-dashboard">
+                    <h3>No clothing items yet</h3>
+                    <p>Add your first clothing item to start building your wardrobe.</p>
+                    <a href="{% url 'add_clothing_item' %}" class="empty-add-btn">+ Add First Item</a>
+                </div>
+            {% endfor %}
+
+        </section>
+
+    </section>
+
+</main>
+
+<script>
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const wardrobeSidebar = document.getElementById("wardrobeSidebar");
+    const profileTrigger = document.getElementById("profileTrigger");
+    const profileDropdown = document.getElementById("profileDropdown");
+    const categoryButtons = document.querySelectorAll(".sidebar-category-btn");
+    const wardrobeCards = document.querySelectorAll(".wardrobe-card");
+    const activeCategoryTitle = document.getElementById("activeCategoryTitle");
+    const wardrobeSearchInput = document.getElementById("wardrobeSearchInput");
+    const visibleItemsCount = document.getElementById("visibleItemsCount");
+    const noFilterResults = document.getElementById("noFilterResults");
+
+    let selectedCategory = "all";
+
+    setTimeout(function () {
+        const messageBox = document.querySelector(".dashboard-messages");
+
+        if (messageBox) {
+            messageBox.style.display = "none";
+        }
+    }, 3000);
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", function () {
+            wardrobeSidebar.classList.toggle("open");
+        });
+    }
+
+    if (profileTrigger) {
+        profileTrigger.addEventListener("click", function () {
+            profileDropdown.classList.toggle("open");
+        });
+    }
+
+    function updateVisibleItems() {
+        const searchValue = wardrobeSearchInput
+            ? wardrobeSearchInput.value.trim().toLowerCase()
+            : "";
+
+        let visibleCount = 0;
+
+        wardrobeCards.forEach(function (card) {
+            const cardCategory = card.dataset.category;
+            const cardSearchText = card.dataset.search || "";
+
+            const categoryMatches = selectedCategory === "all" || cardCategory === selectedCategory;
+            const searchMatches = !searchValue || cardSearchText.includes(searchValue);
+
+            if (categoryMatches && searchMatches) {
+                card.style.display = "";
+                visibleCount += 1;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        if (visibleItemsCount) {
+            visibleItemsCount.textContent = "Showing " + visibleCount + " item(s)";
+        }
+
+        if (noFilterResults) {
+            noFilterResults.style.display = visibleCount === 0 && wardrobeCards.length > 0 ? "grid" : "none";
+        }
+    }
+
+    categoryButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            selectedCategory = button.dataset.category;
+            const selectedLabel = button.querySelector("span").textContent;
+
+            categoryButtons.forEach(function (btn) {
+                btn.classList.remove("active");
+            });
+
+            button.classList.add("active");
+
+            if (selectedCategory === "all") {
+                activeCategoryTitle.textContent = "All Wardrobe Items";
+            } else {
+                activeCategoryTitle.textContent = selectedLabel;
+            }
+
+            updateVisibleItems();
+
+            if (window.innerWidth <= 900) {
+                wardrobeSidebar.classList.remove("open");
+            }
+        });
+    });
+
+    if (wardrobeSearchInput) {
+        wardrobeSearchInput.addEventListener("input", updateVisibleItems);
+    }
+
+    updateVisibleItems();
+</script>
+
+</body>
+</html>

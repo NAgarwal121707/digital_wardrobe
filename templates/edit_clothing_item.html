@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Clothing Item | Digital Wardrobe</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="theme-boutique">
+
+<main class="add-item-page">
+
+    <header class="add-item-topbar">
+        <a href="{% url 'dashboard' %}" class="wardrobe-brand">
+            <span>DW</span>
+            <div>
+                <strong>Digital Wardrobe</strong>
+                <small>Back to closet</small>
+            </div>
+        </a>
+
+        <a href="{% url 'dashboard' %}" class="wardrobe-dark-btn">Back to Dashboard</a>
+    </header>
+
+    {% if messages %}
+        <section class="wardrobe-messages">
+            {% for message in messages %}
+                <div class="wardrobe-message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="add-item-layout">
+
+        <div class="add-item-preview-card">
+            <p class="wardrobe-label">Edit Item</p>
+            <h1>Update clothing item</h1>
+            <p>
+                Change the item name, category, color, or image.
+            </p>
+
+            {% if clothing_item.image %}
+                <img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}" class="wardrobe-edit-preview">
+            {% endif %}
+        </div>
+
+        <div class="add-item-form-card">
+            <h2>Edit Clothing Details</h2>
+
+            <form method="post" enctype="multipart/form-data" class="separate-add-form">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-field">
+                    <label for="id_name">Item Name</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_category">Category</label>
+                    {{ form.category }}
+                    {{ form.category.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_color">Color</label>
+                    {{ form.color }}
+                    {{ form.color.errors }}
+                </div>
+
+                <div class="form-field">
+                    <label for="id_image">Image</label>
+
+                    {% if clothing_item.image %}
+                        <div class="current-form-image-box">
+                            <p>Current Image</p>
+                            <img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}" class="current-form-image">
+                        </div>
+                    {% else %}
+                        <div class="current-form-image-box no-form-image">
+                            <p>No image uploaded yet</p>
+                        </div>
+                    {% endif %}
+
+                    {{ form.image }}
+                    {{ form.image.errors }}
+                </div>
+                
+                <button type="submit" class="wardrobe-submit-btn">
+                    Update Clothing Item
+                </button>
+            </form>
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+</html>
