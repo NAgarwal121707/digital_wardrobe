@@ -8,166 +8,125 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body class="dashboard-page">
+<main class="app-shell">
+    <header class="app-header glass-card">
+        <button type="button" class="icon-button" id="openCategories" aria-label="Open categories">☰</button>
+        <div class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>{{ total_items }} item{{ total_items|pluralize }}</small></div></div>
+        <a href="{% url 'add_clothing_item' %}" class="round-add" aria-label="Add item">＋</a>
+    </header>
 
-<main class="wardrobe-shell">
-    <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Open categories">☰</button>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-    <aside class="wardrobe-sidebar" id="wardrobeSidebar">
-        <section class="sidebar-profile-card">
-            <button type="button" class="profile-trigger" id="profileTrigger">
-                <span class="profile-avatar">{{ request.user.email|first|upper }}</span>
-                <div><strong>Profile</strong><small>{{ request.user.email }}</small></div>
-                <span class="profile-arrow">⌄</span>
-            </button>
-            <div class="profile-dropdown" id="profileDropdown">
-                <p>Signed in as</p>
-                <strong>{{ request.user.email }}</strong>
-                <a href="{% url 'logout' %}" class="sidebar-logout-btn">Logout</a>
-            </div>
-        </section>
-
-        <section class="sidebar-summary-card">
-            <p class="sidebar-section-label">Wardrobe Summary</p>
-            <div class="sidebar-stats-row">
-                <div><span>📂</span><strong>{{ total_categories }}</strong><small>Categories</small></div>
-                <div><span>👗</span><strong>{{ total_items }}</strong><small>Items</small></div>
-            </div>
-        </section>
-
-        <section class="sidebar-category-card">
-            <div class="sidebar-section-heading">
-                <p class="sidebar-section-label">Categories</p>
-                <a href="{% url 'add_clothing_item' %}" class="sidebar-add-mini">+</a>
-            </div>
-            <button type="button" class="sidebar-category-btn active" data-category="all"><span>All Items</span><small>{{ total_items }}</small></button>
-            {% for category in categories %}
-                <button type="button" class="sidebar-category-btn" data-category="{{ category.category|lower }}"><span>{{ category.category }}</span><small>{{ category.item_count }}</small></button>
-            {% empty %}
-                <p class="sidebar-empty-text">No categories yet.</p>
-            {% endfor %}
-        </section>
+    <aside class="side-panel" id="sidePanel">
+        <div class="side-panel-head"><strong>My Closet</strong><button type="button" id="closeCategories">×</button></div>
+        <div class="profile-box"><span>{{ request.user.email|first|upper }}</span><div><strong>{{ request.user.email }}</strong><small>Signed in</small></div></div>
+        <a href="{% url 'add_clothing_item' %}" class="primary-link">+ Add clothing</a>
+        <a href="{% url 'logout' %}" class="ghost-link">Logout</a>
     </aside>
+    <div class="panel-backdrop" id="panelBackdrop"></div>
 
-    <section class="wardrobe-main">
-        <header class="mobile-app-header">
-            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open categories">☰</button>
-            <div><strong>Digital Wardrobe</strong><small>{{ total_items }} item(s)</small></div>
-            <a href="{% url 'add_clothing_item' %}" class="mobile-add-btn">＋</a>
-        </header>
-
-        <header class="wardrobe-main-header">
-            <div class="wardrobe-heading-row"><h1>Digital Wardrobe</h1><span></span></div>
-            <div class="wardrobe-main-actions"><a href="{% url 'add_clothing_item' %}" class="add-category-btn">+ Add Item</a></div>
-        </header>
-
-        {% if messages %}
-            <section class="dashboard-messages">
-                {% for message in messages %}<div class="dashboard-message {{ message.tags }}">{{ message }}</div>{% endfor %}
-            </section>
-        {% endif %}
-
-        <section class="wardrobe-intro-card">
-            <div>
-                <p class="wardrobe-label">Your Closet</p>
-                <h2 id="activeCategoryTitle">All Wardrobe Items</h2>
-                <p>View, search, filter, edit and manage your personal wardrobe easily.</p>
-            </div>
+    {% if messages %}
+        <section class="messages-wrap">
+            {% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}
         </section>
+    {% endif %}
 
-        <section class="mobile-category-strip" aria-label="Categories">
-            <button type="button" class="mobile-chip active" data-category="all">All <span>{{ total_items }}</span></button>
+    <section class="hero-card glass-card">
+        <div>
+            <p class="eyebrow">Your Closet</p>
+            <h1>Build outfits faster.</h1>
+            <p>Search, filter, and manage your wardrobe without endless scrolling.</p>
+        </div>
+        <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
+    </section>
+
+    <section class="quick-stats">
+        <div class="stat-pill"><strong>{{ total_items }}</strong><span>Items</span></div>
+        <div class="stat-pill"><strong>{{ total_categories }}</strong><span>Categories</span></div>
+    </section>
+
+    <section class="search-card glass-card">
+        <label class="search-box" for="wardrobeSearchInput"><span>🔍</span><input id="wardrobeSearchInput" type="search" placeholder="Search name, category, color..."></label>
+    </section>
+
+    <section class="category-section">
+        <div class="section-title-row"><h2>Categories</h2><button type="button" class="tiny-link active" data-category="all">All</button></div>
+        <div class="category-scroll" aria-label="Category filter">
+            <button type="button" class="category-card active" data-category="all"><span>✨</span><strong>All Items</strong><small>{{ total_items }} item{{ total_items|pluralize }}</small></button>
             {% for category in categories %}
-                <button type="button" class="mobile-chip" data-category="{{ category.category|lower }}">{{ category.category }} <span>{{ category.item_count }}</span></button>
+                <button type="button" class="category-card" data-category="{{ category.category|lower }}"><span>🏷️</span><strong>{{ category.category }}</strong><small>{{ category.item_count }} item{{ category.item_count|pluralize }}</small></button>
             {% endfor %}
-        </section>
+        </div>
+    </section>
 
-        <section class="wardrobe-toolbar">
-            <div class="wardrobe-search-box"><span>🔍</span><input type="search" id="wardrobeSearchInput" placeholder="Search clothes..."></div>
-            <p class="visible-items-count" id="visibleItemsCount">Showing {{ total_items }} item(s)</p>
-        </section>
+    <section class="section-title-row clothes-title"><div><h2 id="activeCategoryTitle">All clothes</h2><p id="visibleItemsCount">Showing {{ total_items }} item{{ total_items|pluralize }}</p></div><a href="{% url 'add_clothing_item' %}" class="desktop-add-btn">+ Add Item</a></section>
 
-        <div class="no-filter-results" id="noFilterResults"><h3>No matching items found</h3><p>Try another search word or choose a different category.</p></div>
+    <div class="no-filter-results" id="noFilterResults"><h3>No matching items</h3><p>Try a different search or category.</p></div>
 
-        <section class="grid wardrobe-dashboard-grid">
-            {% for item in clothing_items %}
-                <article class="card wardrobe-card" data-category="{{ item.category|lower }}" data-search="{{ item.name|lower }} {{ item.category|lower }} {{ item.color|lower }}">
-                    <div class="card-image {% if item.image %}has-uploaded-image{% endif %}">
-                        {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}" class="wardrobe-item-image">{% endif %}
-                    </div>
-                    <div class="card-body">
-                        <div class="card-title-row"><h3>{{ item.name }}</h3><span class="badge purple-badge">{{ item.category }}</span></div>
-                        <p class="item-color-text">Color: {{ item.color }}</p>
-                        <div class="actions">
-                            <a href="{% url 'edit_clothing_item' item.id %}" class="action-btn edit"><span>✎</span><small>Edit</small></a>
-                            <a href="{% url 'delete_clothing_item' item.id %}" class="action-btn delete"><span>🗑</span><small>Delete</small></a>
-                        </div>
-                    </div>
-                </article>
-            {% empty %}
-                <div class="empty-dashboard"><h3>No clothing items yet</h3><p>Add your first clothing item to start building your wardrobe.</p><a href="{% url 'add_clothing_item' %}" class="empty-add-btn">+ Add First Item</a></div>
-            {% endfor %}
-        </section>
+    <section class="clothes-grid" id="clothesGrid">
+        {% for item in clothing_items %}
+            <a class="clothing-card glass-card" href="{% url 'clothing_item_detail' item.id %}" data-category="{{ item.category|lower }}" data-search="{{ item.name|lower }} {{ item.category|lower }} {{ item.color|lower }}">
+                <div class="clothing-img-wrap">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.png' %}" alt="No image available">
+                    {% endif %}
+                </div>
+                <div class="clothing-info">
+                    <h3>{{ item.name }}</h3>
+                    <span>{{ item.category }}</span>
+                    <small>{{ item.color }}</small>
+                </div>
+            </a>
+        {% empty %}
+            <div class="empty-state glass-card"><img src="{% static 'images/no-image.png' %}" alt="No wardrobe items"><h3>Your wardrobe is empty</h3><p>Add your first item with only a photo and name. Category and color can be chosen quickly using chips.</p><a href="{% url 'add_clothing_item' %}" class="primary-link">+ Add first item</a></div>
+        {% endfor %}
     </section>
 </main>
 
-<nav class="bottom-tabbar" aria-label="Mobile actions">
-    <button type="button" id="bottomCategoriesBtn">☰<small>Categories</small></button>
+<nav class="bottom-nav">
     <a href="{% url 'dashboard' %}" class="active">⌂<small>Home</small></a>
     <a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a>
-    <a href="{% url 'logout' %}">↪<small>Logout</small></a>
+    <button type="button" id="bottomFilterBtn">☰<small>Menu</small></button>
 </nav>
 
 <script>
-    const sidebarToggle = document.getElementById("sidebarToggle");
-    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-    const bottomCategoriesBtn = document.getElementById("bottomCategoriesBtn");
-    const wardrobeSidebar = document.getElementById("wardrobeSidebar");
-    const sidebarOverlay = document.getElementById("sidebarOverlay");
-    const profileTrigger = document.getElementById("profileTrigger");
-    const profileDropdown = document.getElementById("profileDropdown");
-    const categoryButtons = document.querySelectorAll(".sidebar-category-btn, .mobile-chip");
-    const wardrobeCards = document.querySelectorAll(".wardrobe-card");
-    const activeCategoryTitle = document.getElementById("activeCategoryTitle");
-    const wardrobeSearchInput = document.getElementById("wardrobeSearchInput");
-    const visibleItemsCount = document.getElementById("visibleItemsCount");
-    const noFilterResults = document.getElementById("noFilterResults");
-    let selectedCategory = "all";
-
-    function openSidebar(){ wardrobeSidebar.classList.add("open"); sidebarOverlay.classList.add("open"); }
-    function closeSidebar(){ wardrobeSidebar.classList.remove("open"); sidebarOverlay.classList.remove("open"); }
-    [sidebarToggle, mobileMenuBtn, bottomCategoriesBtn].forEach(btn => btn && btn.addEventListener("click", openSidebar));
-    sidebarOverlay && sidebarOverlay.addEventListener("click", closeSidebar);
-    profileTrigger && profileTrigger.addEventListener("click", () => profileDropdown.classList.toggle("open"));
-
-    setTimeout(() => { const box = document.querySelector(".dashboard-messages"); if (box) box.style.display = "none"; }, 3000);
-
-    function updateVisibleItems() {
-        const searchValue = wardrobeSearchInput ? wardrobeSearchInput.value.trim().toLowerCase() : "";
-        let visibleCount = 0;
-        wardrobeCards.forEach(card => {
-            const categoryMatches = selectedCategory === "all" || card.dataset.category === selectedCategory;
-            const searchMatches = !searchValue || (card.dataset.search || "").includes(searchValue);
-            const show = categoryMatches && searchMatches;
-            card.style.display = show ? "" : "none";
-            if (show) visibleCount += 1;
-        });
-        if (visibleItemsCount) visibleItemsCount.textContent = "Showing " + visibleCount + " item(s)";
-        if (noFilterResults) noFilterResults.style.display = visibleCount === 0 && wardrobeCards.length > 0 ? "grid" : "none";
-    }
-
-    categoryButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            selectedCategory = button.dataset.category;
-            const label = button.querySelector("span") ? button.childNodes[0].textContent.trim() : button.textContent.trim();
-            categoryButtons.forEach(btn => btn.classList.toggle("active", btn.dataset.category === selectedCategory));
-            if (activeCategoryTitle) activeCategoryTitle.textContent = selectedCategory === "all" ? "All Wardrobe Items" : label;
-            updateVisibleItems();
-            if (window.innerWidth <= 900) closeSidebar();
-        });
+const openCategories = document.getElementById('openCategories');
+const closeCategories = document.getElementById('closeCategories');
+const bottomFilterBtn = document.getElementById('bottomFilterBtn');
+const sidePanel = document.getElementById('sidePanel');
+const panelBackdrop = document.getElementById('panelBackdrop');
+const categoryButtons = document.querySelectorAll('[data-category]');
+const cards = document.querySelectorAll('.clothing-card');
+const searchInput = document.getElementById('wardrobeSearchInput');
+const noResults = document.getElementById('noFilterResults');
+const countText = document.getElementById('visibleItemsCount');
+const title = document.getElementById('activeCategoryTitle');
+let activeCategory = 'all';
+function openPanel(){ sidePanel.classList.add('open'); panelBackdrop.classList.add('open'); }
+function closePanel(){ sidePanel.classList.remove('open'); panelBackdrop.classList.remove('open'); }
+[openCategories,bottomFilterBtn].forEach(btn => btn && btn.addEventListener('click', openPanel));
+[closeCategories,panelBackdrop].forEach(el => el && el.addEventListener('click', closePanel));
+function applyFilters(){
+    const term = (searchInput.value || '').trim().toLowerCase();
+    let visible = 0;
+    cards.forEach(card => {
+        const matchCategory = activeCategory === 'all' || card.dataset.category === activeCategory;
+        const matchSearch = !term || card.dataset.search.includes(term);
+        const show = matchCategory && matchSearch;
+        card.style.display = show ? '' : 'none';
+        if(show) visible++;
     });
-    wardrobeSearchInput && wardrobeSearchInput.addEventListener("input", updateVisibleItems);
-    updateVisibleItems();
+    noResults.style.display = visible ? 'none' : 'block';
+    countText.textContent = `Showing ${visible} item${visible === 1 ? '' : 's'}`;
+}
+categoryButtons.forEach(btn => btn.addEventListener('click', () => {
+    activeCategory = btn.dataset.category;
+    categoryButtons.forEach(b => b.classList.toggle('active', b.dataset.category === activeCategory));
+    title.textContent = activeCategory === 'all' ? 'All clothes' : btn.querySelector('strong')?.textContent || 'Filtered clothes';
+    closePanel();
+    applyFilters();
+}));
+searchInput.addEventListener('input', applyFilters);
 </script>
 </body>
 </html>

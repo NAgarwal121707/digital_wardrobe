@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>{{ clothing_item.name }} | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
+<body class="detail-page">
+<main class="detail-shell">
+    <header class="form-topbar"><a href="{% url 'dashboard' %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a><a href="{% url 'dashboard' %}" class="ghost-link">Back</a></header>
+    <section class="detail-card glass-card">
+        <div class="detail-image-box">
+            {% if clothing_item.image %}<img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image available">{% endif %}
+        </div>
+        <div class="detail-info-box">
+            <p class="eyebrow">Clothing Item</p>
+            <h1>{{ clothing_item.name }}</h1>
+            <div class="detail-meta"><span>🏷️ {{ clothing_item.category }}</span><span>🎨 {{ clothing_item.color }}</span></div>
+            <div class="detail-actions"><a href="{% url 'edit_clothing_item' clothing_item.id %}" class="primary-button">Edit Item</a><a href="{% url 'delete_clothing_item' clothing_item.id %}" class="danger-link">Delete</a></div>
+        </div>
+    </section>
+</main>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}" class="active">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a></nav>
+</body>
+</html>

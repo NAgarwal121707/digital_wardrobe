@@ -3,17 +3,16 @@ from django.urls import path
 
 from . import views
 
-
 urlpatterns = [
     path("", views.login_view, name="login"),
     path("login/", views.login_view, name="login"),
     path("register/", views.register_view, name="register"),
     path("dashboard/", views.dashboard_view, name="dashboard"),
     path("add-item/", views.add_clothing_item_view, name="add_clothing_item"),
+    path("item/<int:item_id>/", views.clothing_item_detail_view, name="clothing_item_detail"),
     path("item/<int:item_id>/edit/", views.edit_clothing_item_view, name="edit_clothing_item"),
     path("item/<int:item_id>/delete/", views.delete_clothing_item_view, name="delete_clothing_item"),
     path("logout/", views.logout_view, name="logout"),
-
     path(
         "password-reset/",
         auth_views.PasswordResetView.as_view(
@@ -26,9 +25,7 @@ urlpatterns = [
     ),
     path(
         "password-reset/done/",
-        auth_views.PasswordResetDoneView.as_view(
-            template_name="password_reset_done.html",
-        ),
+        auth_views.PasswordResetDoneView.as_view(template_name="password_reset_done.html"),
         name="password_reset_done",
     ),
     path(
@@ -41,9 +38,7 @@ urlpatterns = [
     ),
     path(
         "reset/done/",
-        auth_views.PasswordResetCompleteView.as_view(
-            template_name="password_reset_complete.html",
-        ),
+        auth_views.PasswordResetCompleteView.as_view(template_name="password_reset_complete.html"),
         name="password_reset_complete",
     ),
 ]

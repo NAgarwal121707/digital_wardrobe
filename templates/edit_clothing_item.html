@@ -1,45 +1,31 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Clothing Item | Digital Wardrobe</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-</head>
-<body class="theme-boutique">
-<main class="add-item-page">
-    <header class="add-item-topbar">
-        <a href="{% url 'dashboard' %}" class="wardrobe-brand"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a>
-        <a href="{% url 'dashboard' %}" class="wardrobe-dark-btn">Back</a>
-    </header>
-    {% if messages %}<section class="wardrobe-messages">{% for message in messages %}<div class="wardrobe-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
-    <section class="add-item-layout">
-        <div class="add-item-preview-card">
-            <p class="wardrobe-label">Edit Item</p><h1>Update clothing item</h1><p>Change the name, category, color or replace the photo.</p>
-            {% if clothing_item.image %}<img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}" class="wardrobe-edit-preview">{% endif %}
-            <div class="form-closet-illustration" aria-hidden="true"><div class="form-closet-rail"></div><div class="form-cloth one"></div><div class="form-cloth two"></div><div class="form-cloth three"></div></div>
-        </div>
-        <div class="add-item-form-card">
-            <h2>Edit Clothing Details</h2>
-            <form method="post" enctype="multipart/form-data" class="separate-add-form">
-                {% csrf_token %}
-                {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
-                <div class="form-field"><label for="id_name">Item Name</label>{{ form.name }}{{ form.name.errors }}</div>
-                <div class="form-field"><label for="id_category">Category</label>{{ form.category }}{{ form.category.errors }}</div>
-                <div class="form-field"><label for="id_color">Color</label>{{ form.color }}{{ form.color.errors }}</div>
-                <div class="form-field"><label for="id_image">Image</label>
-                    {% if clothing_item.image %}
-                        <div class="current-form-image-box"><p>Current Image</p><img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}" class="current-form-image"></div>
-                    {% else %}
-                        <div class="current-form-image-box no-form-image"><p>No image uploaded yet</p></div>
-                    {% endif %}
-{{ form.image }}{{ form.image.errors }}</div>
-                <button type="submit" class="wardrobe-submit-btn">Update Clothing Item</button>
-            </form>
-        </div>
+<head><meta charset="UTF-8"><title>Edit Clothing Item | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
+<body class="form-page">
+<main class="form-shell">
+    <header class="form-topbar"><a href="{% url 'clothing_item_detail' clothing_item.id %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to item</small></div></a><a href="{% url 'clothing_item_detail' clothing_item.id %}" class="ghost-link">Back</a></header>
+    {% if messages %}<section class="messages-wrap">{% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+    <section class="form-hero glass-card">
+        <div><p class="eyebrow">Edit Item</p><h1>Update details.</h1><p>Change the image, name, category, or color anytime.</p></div>
+        {% if clothing_item.image %}<img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}" class="hero-img item-preview-img">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image" class="hero-img item-preview-img">{% endif %}
+    </section>
+    <section class="form-card glass-card">
+        <h2>Edit Clothing Details</h2>
+        <form method="post" enctype="multipart/form-data" class="smart-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="form-field"><label for="id_image">Replace Photo <small>optional</small></label>{{ form.image }}{{ form.image.errors }}</div>
+            <div class="form-field"><label for="id_name">Item Name</label>{{ form.name }}{{ form.name.errors }}</div>
+            <div class="form-field"><label for="id_category">Category <small>optional</small></label>{{ form.category }}{{ form.category.errors }}<div class="chip-row" data-fill="id_category"><button type="button">Tops</button><button type="button">Bottoms</button><button type="button">Shoes</button><button type="button">Outerwear</button><button type="button">Ethnic</button><button type="button">Formal</button><button type="button">Party Wear</button><button type="button">Accessories</button></div></div>
+            <div class="form-field"><label for="id_color">Color <small>optional</small></label>{{ form.color }}{{ form.color.errors }}<div class="chip-row" data-fill="id_color"><button type="button">Black</button><button type="button">White</button><button type="button">Blue</button><button type="button">Red</button><button type="button">Pink</button><button type="button">Green</button><button type="button">Brown</button><button type="button">Multicolor</button></div></div>
+            <button type="submit" class="primary-button">Update Clothing Item</button>
+        </form>
     </section>
 </main>
-<nav class="bottom-tabbar form-tabbar"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+<script>
+document.querySelectorAll('.chip-row').forEach(row => row.addEventListener('click', e => { if(e.target.tagName !== 'BUTTON') return; const input = document.getElementById(row.dataset.fill); input.value = e.target.textContent.trim(); row.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target)); }));
+</script>
 </body>
 </html>

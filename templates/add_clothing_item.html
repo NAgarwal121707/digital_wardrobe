@@ -7,33 +7,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body class="theme-boutique">
-<main class="add-item-page">
-    <header class="add-item-topbar">
-        <a href="{% url 'dashboard' %}" class="wardrobe-brand"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a>
-        <a href="{% url 'dashboard' %}" class="wardrobe-dark-btn">Back</a>
-    </header>
-    {% if messages %}<section class="wardrobe-messages">{% for message in messages %}<div class="wardrobe-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
-    <section class="add-item-layout">
-        <div class="add-item-preview-card">
-            <p class="wardrobe-label">New Item</p><h1>Add to your wardrobe</h1><p>Upload a clothing photo and save it with a name, category and color.</p>
-            
-            <div class="form-closet-illustration" aria-hidden="true"><div class="form-closet-rail"></div><div class="form-cloth one"></div><div class="form-cloth two"></div><div class="form-cloth three"></div></div>
-        </div>
-        <div class="add-item-form-card">
-            <h2>Clothing Details</h2>
-            <form method="post" enctype="multipart/form-data" class="separate-add-form">
-                {% csrf_token %}
-                {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
-                <div class="form-field"><label for="id_name">Item Name</label>{{ form.name }}{{ form.name.errors }}</div>
-                <div class="form-field"><label for="id_category">Category</label>{{ form.category }}{{ form.category.errors }}</div>
-                <div class="form-field"><label for="id_color">Color</label>{{ form.color }}{{ form.color.errors }}</div>
-                <div class="form-field"><label for="id_image">Image</label>{{ form.image }}{{ form.image.errors }}</div>
-                <button type="submit" class="wardrobe-submit-btn">Save Clothing Item</button>
-            </form>
-        </div>
+<body class="form-page">
+<main class="form-shell">
+    <header class="form-topbar"><a href="{% url 'dashboard' %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a><a href="{% url 'dashboard' %}" class="ghost-link">Back</a></header>
+    {% if messages %}<section class="messages-wrap">{% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+
+    <section class="form-hero glass-card">
+        <div><p class="eyebrow">New Item</p><h1>Add clothes in seconds.</h1><p>Only the item name is required. Tap chips for category and color instead of typing everything.</p></div>
+        <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
+    </section>
+
+    <section class="form-card glass-card">
+        <h2>Clothing Details</h2>
+        <form method="post" enctype="multipart/form-data" class="smart-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="form-field"><label for="id_image">Photo <small>optional</small></label>{{ form.image }}{{ form.image.errors }}</div>
+            <div class="form-field"><label for="id_name">Item Name</label>{{ form.name }}{{ form.name.errors }}</div>
+            <div class="form-field"><label for="id_category">Category <small>optional</small></label>{{ form.category }}{{ form.category.errors }}
+                <div class="chip-row" data-fill="id_category"><button type="button">Tops</button><button type="button">Bottoms</button><button type="button">Shoes</button><button type="button">Outerwear</button><button type="button">Ethnic</button><button type="button">Formal</button><button type="button">Party Wear</button><button type="button">Accessories</button></div>
+            </div>
+            <div class="form-field"><label for="id_color">Color <small>optional</small></label>{{ form.color }}{{ form.color.errors }}
+                <div class="chip-row" data-fill="id_color"><button type="button">Black</button><button type="button">White</button><button type="button">Blue</button><button type="button">Red</button><button type="button">Pink</button><button type="button">Green</button><button type="button">Brown</button><button type="button">Multicolor</button></div>
+            </div>
+            <button type="submit" class="primary-button">Save Clothing Item</button>
+        </form>
     </section>
 </main>
-<nav class="bottom-tabbar form-tabbar"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+<script>
+document.querySelectorAll('.chip-row').forEach(row => row.addEventListener('click', e => { if(e.target.tagName !== 'BUTTON') return; const input = document.getElementById(row.dataset.fill); input.value = e.target.textContent.trim(); row.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target)); }));
+</script>
 </body>
 </html>

@@ -1,49 +1,22 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register | Digital Wardrobe</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-</head>
-<body class="register-page">
-
-<main class="auth-shell">
-    <section class="auth-card auth-card-wide">
-
-
-        <div class="auth-heading">
-            <h1>Create your account</h1>
-            <p>Add clothes, upload images, and manage your wardrobe from one simple dashboard.</p>
-        </div>
-
-        <form method="post" class="modern-form">
-            {% csrf_token %}
-
-            {% if form.non_field_errors %}
-                <div class="form-alert">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
-
-            {% for field in form %}
-                <div class="form-field">
-                    <label>{{ field.label }}</label>
-                    {{ field }}
-                    {{ field.errors }}
-                </div>
-            {% endfor %}
-
-            <button type="submit" class="primary-button">Create Account</button>
-        </form>
-
-        <p class="switch-link">
-            Already have an account?
-            <a href="{% url 'login' %}">Login</a>
-        </p>
-    </section>
+<head><meta charset="UTF-8"><title>Register | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
+<body class="auth-page">
+<main class="auth-card glass-card">
+    <div class="auth-brand"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Start your closet</small></div></div>
+    <h1>Create account</h1>
+    <p class="auth-subtitle">Upload clothes, filter categories, and manage your wardrobe beautifully.</p>
+    <form method="post" class="smart-form auth-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="form-field"><label for="{{ form.email.id_for_label }}">Email</label>{{ form.email }}{{ form.email.errors }}</div>
+        <div class="form-field password-field"><label for="{{ form.password1.id_for_label }}">Password</label><div class="password-wrap">{{ form.password1 }}<button type="button" class="password-toggle" aria-label="Show password">👁</button></div>{{ form.password1.errors }}</div>
+        <div class="form-field password-field"><label for="{{ form.password2.id_for_label }}">Confirm Password</label><div class="password-wrap">{{ form.password2 }}<button type="button" class="password-toggle" aria-label="Show password">👁</button></div>{{ form.password2.errors }}</div>
+        <button type="submit" class="primary-button">Create Account</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
 </main>
-
+<script src="{% static 'js/password-toggle.js' %}"></script>
 </body>
 </html>
