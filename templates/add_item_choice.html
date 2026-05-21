@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Add Item | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
+<body class="form-page">
+<main class="form-shell">
+    <header class="form-topbar"><a href="{% url 'dashboard' %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Choose add method</small></div></a><a href="{% url 'dashboard' %}" class="ghost-link">Back</a></header>
+    <section class="choice-hero glass-card animate-rise">
+        <p class="eyebrow">Phase 2</p>
+        <h1>How do you want to add this item?</h1>
+        <p>Keep it simple manually, or start with the Wardrobe AI Agent flow.</p>
+    </section>
+    <section class="choice-grid">
+        <a href="{% url 'add_clothing_item_manual' %}" class="choice-card glass-card animate-card">
+            <span class="choice-icon">✍️</span>
+            <h2>Add manually</h2>
+            <p>Best when you already know the name, category, and color. Quick chips make entry faster.</p>
+            <strong>Continue manually →</strong>
+        </a>
+        <a href="{% url 'ai_add_clothing_item' %}" class="choice-card glass-card ai-choice animate-card delay-1">
+            <span class="choice-icon">✨</span>
+            <h2>Use Wardrobe AI Agent</h2>
+            <p>Upload a photo first. This starter flow is ready for future AI detection and stylist automation.</p>
+            <strong>Start smart upload →</strong>
+        </a>
+    </section>
+</main>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
+</body>
+</html>

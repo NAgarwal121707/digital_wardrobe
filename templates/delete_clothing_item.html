@@ -10,5 +10,6 @@
         <div class="detail-info-box delete-box"><p class="eyebrow">Delete Item</p><h1>Delete {{ clothing_item.name }}?</h1><p>This action cannot be undone.</p><div class="detail-meta"><span>🏷️ {{ clothing_item.category }}</span><span>🎨 {{ clothing_item.color }}</span></div><form method="post" class="delete-actions">{% csrf_token %}<button type="submit" class="danger-link">Yes, Delete</button><a href="{% url 'clothing_item_detail' clothing_item.id %}" class="ghost-link">Cancel</a></form></div>
     </section>
 </main>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
 </body>
 </html>

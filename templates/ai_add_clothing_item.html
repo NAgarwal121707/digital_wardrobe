@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>AI Add Item | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
+<body class="form-page">
+<main class="form-shell">
+    <header class="form-topbar"><a href="{% url 'add_clothing_item' %}" class="brand-mini"><span>DW</span><div><strong>Wardrobe AI</strong><small>Smart upload</small></div></a><a href="{% url 'add_clothing_item' %}" class="ghost-link">Back</a></header>
+    {% if messages %}<section class="messages-wrap">{% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+    <section class="form-hero glass-card animate-rise">
+        <div><p class="eyebrow">AI Agent</p><h1>Upload now. Style smarter.</h1><p>This Phase 2 starter keeps your flow ready for future image detection. Review the suggested fields before saving.</p></div>
+        <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
+    </section>
+    <section class="ai-note glass-card"><span>✨</span><p><strong>Current smart starter:</strong> upload image, save quick details, then ask the stylist for outfit ideas from your saved closet.</p></section>
+    <section class="form-card glass-card">
+        <h2>AI Suggested Details</h2>
+        <form method="post" enctype="multipart/form-data" class="smart-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="form-field"><label for="id_image">Upload Photo</label>{{ form.image }}{{ form.image.errors }}</div>
+            <div class="form-field"><label for="id_name">Suggested Name</label>{{ form.name }}{{ form.name.errors }}</div>
+            <div class="form-field"><label for="id_category">Suggested Category</label>{{ form.category }}{{ form.category.errors }}<div class="chip-row" data-fill="id_category"><button type="button">Tops</button><button type="button">Bottoms</button><button type="button">Shoes</button><button type="button">Outerwear</button><button type="button">Ethnic</button><button type="button">Formal</button><button type="button">Party Wear</button><button type="button">Accessories</button></div></div>
+            <div class="form-field"><label for="id_color">Suggested Color</label>{{ form.color }}{{ form.color.errors }}<div class="chip-row" data-fill="id_color"><button type="button">Black</button><button type="button">White</button><button type="button">Blue</button><button type="button">Red</button><button type="button">Pink</button><button type="button">Green</button><button type="button">Brown</button><button type="button">Multicolor</button></div></div>
+            <button type="submit" class="primary-button">Save Smart Item</button>
+        </form>
+    </section>
+</main>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
+<script>
+document.querySelectorAll('.chip-row').forEach(row => row.addEventListener('click', e => { if(e.target.tagName !== 'BUTTON') return; const input = document.getElementById(row.dataset.fill); input.value = e.target.textContent.trim(); row.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target)); }));
+</script>
+</body>
+</html>

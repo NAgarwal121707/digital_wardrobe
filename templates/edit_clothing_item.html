@@ -23,7 +23,7 @@
         </form>
     </section>
 </main>
-<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
 <script>
 document.querySelectorAll('.chip-row').forEach(row => row.addEventListener('click', e => { if(e.target.tagName !== 'BUTTON') return; const input = document.getElementById(row.dataset.fill); input.value = e.target.textContent.trim(); row.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target)); }));
 </script>

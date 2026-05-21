@@ -5,18 +5,32 @@
 <body class="detail-page">
 <main class="detail-shell">
     <header class="form-topbar"><a href="{% url 'dashboard' %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a><a href="{% url 'dashboard' %}" class="ghost-link">Back</a></header>
-    <section class="detail-card glass-card">
+    <section class="detail-card glass-card animate-rise">
         <div class="detail-image-box">
             {% if clothing_item.image %}<img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image available">{% endif %}
+            <span class="category-badge detail-badge">{{ clothing_item.category }}</span>
         </div>
         <div class="detail-info-box">
             <p class="eyebrow">Clothing Item</p>
             <h1>{{ clothing_item.name }}</h1>
             <div class="detail-meta"><span>🏷️ {{ clothing_item.category }}</span><span>🎨 {{ clothing_item.color }}</span></div>
+            <p class="stylist-tip">✨ Stylist tip: Use this item as the hero piece and pair it with a clean neutral or matching accent from your closet.</p>
             <div class="detail-actions"><a href="{% url 'edit_clothing_item' clothing_item.id %}" class="primary-button">Edit Item</a><a href="{% url 'delete_clothing_item' clothing_item.id %}" class="danger-link">Delete</a></div>
         </div>
     </section>
+
+    {% if related_items %}
+    <section class="section-title-row related-title"><div><h2>Similar category</h2><p>More from {{ clothing_item.category }}</p></div></section>
+    <section class="clothes-grid related-grid">
+        {% for item in related_items %}
+        <a class="clothing-card glass-card" href="{% url 'clothing_item_detail' item.id %}">
+            <div class="clothing-img-wrap">{% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image available">{% endif %}<span class="category-badge">{{ item.category }}</span></div>
+            <div class="clothing-info"><h3>{{ item.name }}</h3><small>{{ item.color }}</small></div>
+        </a>
+        {% endfor %}
+    </section>
+    {% endif %}
 </main>
-<nav class="bottom-nav"><a href="{% url 'dashboard' %}" class="active">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a></nav>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}" class="active">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
 </body>
 </html>

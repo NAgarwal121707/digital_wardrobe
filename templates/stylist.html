@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>AI Stylist | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
+<body class="dashboard-page">
+<main class="app-shell stylist-shell">
+    <header class="app-header glass-card animate-drop">
+        <a href="{% url 'dashboard' %}" class="icon-button" aria-label="Back">‹</a>
+        <div class="brand-mini"><span>AI</span><div><strong>Wardrobe Stylist</strong><small>Your personal outfit helper</small></div></div>
+        <a href="{% url 'add_clothing_item' %}" class="round-add" aria-label="Add item">＋</a>
+    </header>
+
+    <section class="stylist-hero glass-card animate-rise">
+        <div>
+            <p class="eyebrow">Personal Stylist</p>
+            <h1>Let your closet suggest the vibe.</h1>
+            <p>{{ suggestion }}</p>
+        </div>
+        <div class="stylist-bubble">✨</div>
+    </section>
+
+    <section class="stylist-grid">
+        <article class="stylist-card glass-card animate-card">
+            <span>☀️</span>
+            <h2>Daily Outfit</h2>
+            <p>Pick one clean base item, then add a matching category from your wardrobe.</p>
+        </article>
+        <article class="stylist-card glass-card animate-card delay-1">
+            <span>🎉</span>
+            <h2>Occasion Look</h2>
+            <p>Use categories like Party Wear, Formal, Ethnic, or Accessories to build faster looks.</p>
+        </article>
+        <article class="stylist-card glass-card animate-card delay-2">
+            <span>🧩</span>
+            <h2>Missing Pieces</h2>
+            <p>If one category is empty, add it next so outfit suggestions become better.</p>
+        </article>
+    </section>
+
+    <section class="section-title-row"><div><h2>Your style signals</h2><p>Based on saved categories and colors.</p></div></section>
+    <div class="signal-row">
+        {% for category in categories %}<span class="signal-pill">{{ category.category }} · {{ category.item_count }}</span>{% empty %}<span class="signal-pill">No categories yet</span>{% endfor %}
+    </div>
+    <div class="signal-row color-row">
+        {% for color in colors %}<span class="signal-pill accent">{{ color.color }} · {{ color.item_count }}</span>{% empty %}<span class="signal-pill accent">No colors yet</span>{% endfor %}
+    </div>
+
+    <section class="section-title-row"><div><h2>Items to style now</h2><p>Tap any item to edit or view details.</p></div><a href="{% url 'add_clothing_item' %}" class="desktop-add-btn">Add More</a></section>
+    <section class="clothes-grid stylist-items">
+        {% for item in featured_items %}
+        <a class="clothing-card glass-card animate-card" href="{% url 'clothing_item_detail' item.id %}">
+            <div class="clothing-img-wrap">
+                {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image available">{% endif %}
+                <span class="category-badge">{{ item.category }}</span>
+            </div>
+            <div class="clothing-info"><h3>{{ item.name }}</h3><small>{{ item.color }}</small></div>
+        </a>
+        {% empty %}
+        <div class="empty-state glass-card"><img src="{% static 'images/no-image.png' %}" alt="No items"><h3>No clothes yet</h3><p>Add a few clothes first so your stylist has something to work with.</p><a href="{% url 'add_clothing_item' %}" class="primary-link">Add clothes</a></div>
+        {% endfor %}
+    </section>
+</main>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a><a href="{% url 'stylist' %}" class="active">✨<small>Stylist</small></a></nav>
+</body>
+</html>

@@ -13,7 +13,7 @@
     {% if messages %}<section class="messages-wrap">{% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
 
     <section class="form-hero glass-card">
-        <div><p class="eyebrow">New Item</p><h1>Add clothes in seconds.</h1><p>Only the item name is required. Tap chips for category and color instead of typing everything.</p></div>
+        <div><p class="eyebrow">Manual Add</p><h1>Add clothes in seconds.</h1><p>Only the item name is required. Tap chips for category and color instead of typing everything.</p></div>
         <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
     </section>
 
@@ -34,7 +34,7 @@
         </form>
     </section>
 </main>
-<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
 <script>
 document.querySelectorAll('.chip-row').forEach(row => row.addEventListener('click', e => { if(e.target.tagName !== 'BUTTON') return; const input = document.getElementById(row.dataset.fill); input.value = e.target.textContent.trim(); row.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target)); }));
 </script>
