@@ -22,12 +22,12 @@
         <form method="post" enctype="multipart/form-data" class="smart-form">
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
-            <div class="form-field"><label for="id_image">Photo <small>optional</small></label>{{ form.image }}{{ form.image.errors }}</div>
+            <div class="form-field"><label for="id_image">Photo</label>{{ form.image }}{{ form.image.errors }}</div>
             <div class="form-field"><label for="id_name">Item Name</label>{{ form.name }}{{ form.name.errors }}</div>
-            <div class="form-field"><label for="id_category">Category <small>optional</small></label>{{ form.category }}{{ form.category.errors }}
+            <div class="form-field"><label for="id_category">Category</label>{{ form.category }}{{ form.category.errors }}
                 <div class="chip-row" data-fill="id_category"><button type="button">Tops</button><button type="button">Bottoms</button><button type="button">Shoes</button><button type="button">Outerwear</button><button type="button">Ethnic</button><button type="button">Formal</button><button type="button">Party Wear</button><button type="button">Accessories</button></div>
             </div>
-            <div class="form-field"><label for="id_color">Color <small>optional</small></label>{{ form.color }}{{ form.color.errors }}
+            <div class="form-field"><label for="id_color">Color</label>{{ form.color }}{{ form.color.errors }}
                 <div class="chip-row" data-fill="id_color"><button type="button">Black</button><button type="button">White</button><button type="button">Blue</button><button type="button">Red</button><button type="button">Pink</button><button type="button">Green</button><button type="button">Brown</button><button type="button">Multicolor</button></div>
             </div>
             <button type="submit" class="primary-button">Save Clothing Item</button>
