@@ -50,11 +50,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
-
     "accounts",
     "wardrobe",
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -197,3 +197,11 @@ DEFAULT_FROM_EMAIL = "Digital Wardrobe <no-reply@digitalwardrobe.local>"
 # =========================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
