@@ -3,40 +3,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Add Clothing Item | Digital Wardrobe</title>
+    <title>Add Item | Digital Wardrobe</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body class="form-page">
 <main class="form-shell">
-    <header class="form-topbar"><a href="{% url 'dashboard' %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a><a href="{% url 'dashboard' %}" class="ghost-link">Back</a></header>
-    {% if messages %}<section class="messages-wrap">{% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+    <header class="form-topbar">
+        <a href="{% url 'dashboard' %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a>
+        <a href="{% url 'dashboard' %}" class="ghost-link">Back</a>
+    </header>
 
-    <section class="form-hero glass-card">
-        <div><p class="eyebrow">Manual Add</p><h1>Add clothes in seconds.</h1><p>Only the item name is required. Tap chips for category and color instead of typing everything.</p></div>
+    <section class="form-hero glass-card happy-float">
+        <div>
+            <p class="eyebrow">Add New Item</p>
+            <h1>How do you want to add it?</h1>
+            <p>Choose manual entry, or let Wardrobe AI visually scan your photo and fill the form for you.</p>
+        </div>
         <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
     </section>
 
-    <section class="form-card glass-card">
-        <h2>Clothing Details</h2>
-        <form method="post" enctype="multipart/form-data" class="smart-form">
-            {% csrf_token %}
-            {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
-            <div class="form-field"><label for="id_image">Photo</label>{{ form.image }}{{ form.image.errors }}</div>
-            <div class="form-field"><label for="id_name">Item Name</label>{{ form.name }}{{ form.name.errors }}</div>
-            <div class="form-field"><label for="id_category">Category</label>{{ form.category }}{{ form.category.errors }}
-                <div class="chip-row" data-fill="id_category"><button type="button">Tops</button><button type="button">Bottoms</button><button type="button">Shoes</button><button type="button">Outerwear</button><button type="button">Ethnic</button><button type="button">Formal</button><button type="button">Party Wear</button><button type="button">Accessories</button></div>
-            </div>
-            <div class="form-field"><label for="id_color">Color</label>{{ form.color }}{{ form.color.errors }}
-                <div class="chip-row" data-fill="id_color"><button type="button">Black</button><button type="button">White</button><button type="button">Blue</button><button type="button">Red</button><button type="button">Pink</button><button type="button">Green</button><button type="button">Brown</button><button type="button">Multicolor</button></div>
-            </div>
-            <button type="submit" class="primary-button">Save Clothing Item</button>
-        </form>
+    <section class="choice-grid">
+        <a href="{% url 'add_clothing_item_ai' %}" class="choice-card glass-card recommended-card">
+            <span class="choice-icon">✨</span>
+            <small class="choice-badge">Recommended</small>
+            <h2>Use Wardrobe AI Agent</h2>
+            <p>Upload one clothing image. AI reads garment type, color, vibe, occasion, and fills the details. You can edit before saving.</p>
+            <strong>Start with AI →</strong>
+        </a>
+
+        <a href="{% url 'add_clothing_item_manual' %}" class="choice-card glass-card">
+            <span class="choice-icon">✍️</span>
+            <h2>Add Manually</h2>
+            <p>Add image, name, category, and color yourself using quick chips. Best when you already know exact details.</p>
+            <strong>Manual add →</strong>
+        </a>
     </section>
 </main>
-<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
-<script>
-document.querySelectorAll('.chip-row').forEach(row => row.addEventListener('click', e => { if(e.target.tagName !== 'BUTTON') return; const input = document.getElementById(row.dataset.fill); input.value = e.target.textContent.trim(); row.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target)); }));
-</script>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
 </body>
 </html>

@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wardrobe AI Agent | Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="form-page ai-page">
+<main class="form-shell">
+    <header class="form-topbar"><a href="{% url 'add_clothing_item' %}" class="brand-mini"><span>AI</span><div><strong>Wardrobe AI Agent</strong><small>Review before saving</small></div></a><a href="{% url 'add_clothing_item' %}" class="ghost-link">Back</a></header>
+    {% if messages %}<section class="messages-wrap">{% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+
+    <section class="form-hero glass-card ai-hero">
+        <div>
+            <p class="eyebrow">Vision AI Stylist</p>
+            <h1>Upload photo. AI fills the form.</h1>
+            <p>The AI will visually detect item name, category, color, style vibe, occasion, season, and styling notes. You can change anything before saving.</p>
+        </div>
+        {% if image_url %}<img src="{{ image_url }}" alt="AI uploaded clothing" class="hero-img item-preview-img">{% else %}<img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">{% endif %}
+    </section>
+
+    {% if not analysis or analysis.error %}
+        <section class="form-card glass-card">
+            <h2>Step 1: Upload clothing image</h2>
+            <form method="post" enctype="multipart/form-data" class="smart-form">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="id_ai_image">Clothing Photo</label>
+                    <input id="id_ai_image" class="form-control file-input" type="file" name="image" accept="image/*" required>
+                    <small class="field-help">Use a clear front photo for best AI results. JPG, PNG, WEBP under 5 MB.</small>
+                </div>
+                <button type="submit" class="primary-button">Analyze with AI ✨</button>
+            </form>
+        </section>
+    {% endif %}
+
+    {% if analysis and not analysis.error %}
+        <section class="ai-review-grid">
+            <article class="ai-preview-card glass-card">
+                <img src="{{ image_url }}" alt="AI uploaded clothing">
+                <div>
+                    <p class="eyebrow">AI Found</p>
+                    <h2>{{ analysis.garment_type|default:"Clothing Item" }}</h2>
+                    <div class="tag-cloud">
+                        {% for tag in analysis.tags %}<span>{{ tag }}</span>{% endfor %}
+                        {% if analysis.aesthetic %}<span>{{ analysis.aesthetic }}</span>{% endif %}
+                        {% if analysis.occasion %}<span>{{ analysis.occasion }}</span>{% endif %}
+                    </div>
+                    {% if analysis.styling_notes %}<p class="styling-note">{{ analysis.styling_notes }}</p>{% endif %}
+                </div>
+            </article>
+
+            <section class="form-card glass-card">
+                <h2>Step 2: Review & Save</h2>
+                <p class="form-intro">AI filled these fields. If anything feels wrong, edit it manually before saving.</p>
+                <form method="post" class="smart-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_ai_item">
+                    <input type="hidden" name="ai_image_path" value="{{ image_path }}">
+                    <input type="hidden" name="garment_type" value="{{ analysis.garment_type }}">
+                    <input type="hidden" name="aesthetic" value="{{ analysis.aesthetic }}">
+                    <input type="hidden" name="occasion" value="{{ analysis.occasion }}">
+                    <input type="hidden" name="season" value="{{ analysis.season }}">
+                    <input type="hidden" name="styling_notes" value="{{ analysis.styling_notes }}">
+
+                    <div class="form-field"><label for="id_name">Item Name</label><input id="id_name" name="name" class="form-control" value="{{ analysis.name }}" required></div>
+                    <div class="form-field"><label for="id_category">Category</label><input id="id_category" name="category" class="form-control" value="{{ analysis.category }}"></div>
+                    <div class="form-field"><label for="id_color">Color</label><input id="id_color" name="color" class="form-control" value="{{ analysis.color }}"></div>
+
+                    <div class="ai-insight-box">
+                        <strong>Extra AI insight</strong>
+                        <p><b>Fit:</b> {{ analysis.fit_silhouette|default:"Not detected" }}</p>
+                        <p><b>Season:</b> {{ analysis.season|default:"Flexible" }}</p>
+                        <p><b>Complete outfit?</b> {% if analysis.is_complete_outfit %}Yes — focus on accessories and footwear.{% else %}No — pair it with matching wardrobe items.{% endif %}</p>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="submit" class="primary-button">Save AI-Filled Item</button>
+                        <a href="{% url 'add_clothing_item_ai' %}" class="ghost-link">Try another image</a>
+                    </div>
+                </form>
+            </section>
+        </section>
+    {% endif %}
+</main>
+<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+</body>
+</html>
