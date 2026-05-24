@@ -95,7 +95,20 @@ def dashboard_view(request):
 @login_required(login_url="login")
 def clothing_item_detail_view(request, item_id):
     clothing_item = get_object_or_404(ClothingItem, id=item_id, user=request.user)
-    return render(request, "clothing_item_detail.html", {"clothing_item": clothing_item})
+
+    related_items = (
+        ClothingItem.objects.filter(user=request.user, category=clothing_item.category)
+        .exclude(id=clothing_item.id)[:4]
+    )
+
+    return render(
+        request,
+        "clothing_item_detail.html",
+        {
+            "clothing_item": clothing_item,
+            "related_items": related_items,
+        },
+    )
 
 
 @login_required(login_url="login")
@@ -275,6 +288,44 @@ def delete_clothing_item_view(request, item_id):
         messages.success(request, "Clothing item deleted successfully.")
         return redirect("dashboard")
     return render(request, "delete_clothing_item.html", {"clothing_item": clothing_item})
+
+
+
+@login_required(login_url="login")
+def stylist_view(request):
+    clothing_items = ClothingItem.objects.filter(user=request.user)
+    categories = (
+        clothing_items.values("category")
+        .annotate(item_count=Count("id"))
+        .order_by("category")
+    )
+    colors = (
+        clothing_items.values("color")
+        .annotate(item_count=Count("id"))
+        .order_by("color")
+    )
+    featured_items = clothing_items[:6]
+
+    if clothing_items.exists():
+        suggestion = (
+            "Pick one favorite item, then build around its color and occasion. "
+            "Soon this page can become your full AI personal stylist chatbot."
+        )
+    else:
+        suggestion = (
+            "Add a few wardrobe items first. Then your stylist can understand your closet better."
+        )
+
+    return render(
+        request,
+        "stylist.html",
+        {
+            "suggestion": suggestion,
+            "categories": categories,
+            "colors": colors,
+            "featured_items": featured_items,
+        },
+    )
 
 
 @login_required(login_url="login")

@@ -11,9 +11,11 @@ urlpatterns = [
     path("add-item/", views.add_clothing_item_view, name="add_clothing_item"),
     path("add-item/manual/", views.add_clothing_item_manual_view, name="add_clothing_item_manual"),
     path("add-item/ai/", views.add_clothing_item_ai_view, name="add_clothing_item_ai"),
+    path("add-item/ai-assist/", views.add_clothing_item_ai_view, name="ai_add_clothing_item"),
     path("item/<int:item_id>/", views.clothing_item_detail_view, name="clothing_item_detail"),
     path("item/<int:item_id>/edit/", views.edit_clothing_item_view, name="edit_clothing_item"),
     path("item/<int:item_id>/delete/", views.delete_clothing_item_view, name="delete_clothing_item"),
+    path("stylist/", views.stylist_view, name="stylist"),
     path("logout/", views.logout_view, name="logout"),
     path(
         "password-reset/",
