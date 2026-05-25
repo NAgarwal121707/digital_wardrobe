@@ -28,7 +28,7 @@
                 {% csrf_token %}
                 <div class="form-field">
                     <label for="id_ai_image">Clothing Photo</label>
-                    <input id="id_ai_image" class="form-control file-input" type="file" name="image" accept="image/*" required>
+                    <input id="id_ai_image" class="form-control file-input" type="file" name="image" accept="image/*" capture="environment" required>
                     <small class="field-help">Use a clear front photo for best AI results. JPG, PNG, WEBP under 5 MB.</small>
                 </div>
                 <button type="submit" class="primary-button">Analyze with AI ✨</button>
@@ -64,6 +64,10 @@
                     <input type="hidden" name="occasion" value="{{ analysis.occasion }}">
                     <input type="hidden" name="season" value="{{ analysis.season }}">
                     <input type="hidden" name="styling_notes" value="{{ analysis.styling_notes }}">
+                    <input type="hidden" name="fit_silhouette" value="{{ analysis.fit_silhouette }}">
+                    <input type="hidden" name="is_complete_outfit" value="{% if analysis.is_complete_outfit %}true{% else %}false{% endif %}">
+                    <input type="hidden" name="tags" value="{% for tag in analysis.tags %}{{ tag }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+                    <input type="hidden" name="accessories" value="{% for accessory in analysis.accessories %}{{ accessory }}{% if not forloop.last %}, {% endif %}{% endfor %}">
 
                     <div class="form-field"><label for="id_name">Item Name</label><input id="id_name" name="name" class="form-control" value="{{ analysis.name }}" required></div>
                     <div class="form-field"><label for="id_category">Category</label><input id="id_category" name="category" class="form-control" value="{{ analysis.category }}"></div>

@@ -1,65 +1,148 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>AI Stylist | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
-<body class="dashboard-page">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Stylist | Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="dashboard-page stylist-chat-page">
 <main class="app-shell stylist-shell">
     <header class="app-header glass-card animate-drop">
         <a href="{% url 'dashboard' %}" class="icon-button" aria-label="Back">‹</a>
-        <div class="brand-mini"><span>AI</span><div><strong>Wardrobe Stylist</strong><small>Your personal outfit helper</small></div></div>
+        <div class="brand-mini">
+            <span>AI</span>
+            <div>
+                <strong>Personal Stylist</strong>
+                <small>{{ total_items }} wardrobe item{{ total_items|pluralize }}</small>
+            </div>
+        </div>
         <a href="{% url 'add_clothing_item' %}" class="round-add" aria-label="Add item">＋</a>
     </header>
 
+    {% if messages %}
+        <section class="messages-wrap">
+            {% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}
+        </section>
+    {% endif %}
+
     <section class="stylist-hero glass-card animate-rise">
         <div>
-            <p class="eyebrow">Personal Stylist</p>
-            <h1>Let your closet suggest the vibe.</h1>
+            <p class="eyebrow">Wardrobe-aware AI</p>
+            <h1>Ask your closet what to wear.</h1>
             <p>{{ suggestion }}</p>
         </div>
-        <div class="stylist-bubble">✨</div>
+        <div class="stylist-bubble happy-float">✨</div>
     </section>
 
-    <section class="stylist-grid">
-        <article class="stylist-card glass-card animate-card">
-            <span>☀️</span>
-            <h2>Daily Outfit</h2>
-            <p>Pick one clean base item, then add a matching category from your wardrobe.</p>
-        </article>
-        <article class="stylist-card glass-card animate-card delay-1">
-            <span>🎉</span>
-            <h2>Occasion Look</h2>
-            <p>Use categories like Party Wear, Formal, Ethnic, or Accessories to build faster looks.</p>
-        </article>
-        <article class="stylist-card glass-card animate-card delay-2">
-            <span>🧩</span>
-            <h2>Missing Pieces</h2>
-            <p>If one category is empty, add it next so outfit suggestions become better.</p>
-        </article>
+    <section class="stylist-chat-card glass-card">
+        <div class="chat-head">
+            <div>
+                <h2>Ask your stylist</h2>
+                <p>It uses your saved wardrobe items, colors, occasions, seasons, and AI notes.</p>
+            </div>
+        </div>
+
+        <form method="post" class="stylist-question-form">
+            {% csrf_token %}
+            <label for="stylistQuestion">Your question</label>
+            <textarea id="stylistQuestion" name="question" rows="4" placeholder="Example: What should I wear for a casual dinner tonight?" required>{{ user_question }}</textarea>
+            <button type="submit" class="primary-button">Ask Stylist ✨</button>
+        </form>
+
+        <div class="quick-question-row">
+            {% for question in suggested_questions %}
+                <button type="button" class="quick-question" data-question="{{ question }}">{{ question }}</button>
+            {% endfor %}
+        </div>
+
+        {% if assistant_reply %}
+            <div class="chat-answer-wrap">
+                <div class="chat-bubble user-bubble">
+                    <strong>You</strong>
+                    <p>{{ user_question }}</p>
+                </div>
+                <div class="chat-bubble ai-bubble">
+                    <strong>AI Stylist</strong>
+                    <p>{{ assistant_reply|linebreaksbr }}</p>
+                </div>
+            </div>
+        {% endif %}
     </section>
 
-    <section class="section-title-row"><div><h2>Your style signals</h2><p>Based on saved categories and colors.</p></div></section>
+    <section class="section-title-row">
+        <div>
+            <h2>Your style signals</h2>
+            <p>These help the assistant understand your closet.</p>
+        </div>
+    </section>
+
     <div class="signal-row">
-        {% for category in categories %}<span class="signal-pill">{{ category.category }} · {{ category.item_count }}</span>{% empty %}<span class="signal-pill">No categories yet</span>{% endfor %}
-    </div>
-    <div class="signal-row color-row">
-        {% for color in colors %}<span class="signal-pill accent">{{ color.color }} · {{ color.item_count }}</span>{% empty %}<span class="signal-pill accent">No colors yet</span>{% endfor %}
+        {% for category in categories %}
+            <span class="signal-pill">{{ category.category }} · {{ category.item_count }}</span>
+        {% empty %}
+            <span class="signal-pill">No categories yet</span>
+        {% endfor %}
     </div>
 
-    <section class="section-title-row"><div><h2>Items to style now</h2><p>Tap any item to edit or view details.</p></div><a href="{% url 'add_clothing_item' %}" class="desktop-add-btn">Add More</a></section>
+    <div class="signal-row color-row">
+        {% for color in colors %}
+            <span class="signal-pill accent">{{ color.color }} · {{ color.item_count }}</span>
+        {% empty %}
+            <span class="signal-pill accent">No colors yet</span>
+        {% endfor %}
+    </div>
+
+    <section class="section-title-row">
+        <div>
+            <h2>Items the stylist can use</h2>
+            <p>Tap any item to view its full AI styling details.</p>
+        </div>
+        <a href="{% url 'add_clothing_item' %}" class="desktop-add-btn">Add More</a>
+    </section>
+
     <section class="clothes-grid stylist-items">
         {% for item in featured_items %}
-        <a class="clothing-card glass-card animate-card" href="{% url 'clothing_item_detail' item.id %}">
-            <div class="clothing-img-wrap">
-                {% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image available">{% endif %}
-                <span class="category-badge">{{ item.category }}</span>
-            </div>
-            <div class="clothing-info"><h3>{{ item.name }}</h3><small>{{ item.color }}</small></div>
-        </a>
+            <a class="clothing-card glass-card animate-card" href="{% url 'clothing_item_detail' item.id %}">
+                <div class="clothing-img-wrap">
+                    <span class="image-category-badge">{{ item.category }}</span>
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.png' %}" alt="No image available">
+                    {% endif %}
+                </div>
+                <div class="clothing-info clean-card-info">
+                    <h3>{{ item.name }}</h3>
+                    <small class="color-line">🎨 {{ item.color }}</small>
+                </div>
+            </a>
         {% empty %}
-        <div class="empty-state glass-card"><img src="{% static 'images/no-image.png' %}" alt="No items"><h3>No clothes yet</h3><p>Add a few clothes first so your stylist has something to work with.</p><a href="{% url 'add_clothing_item' %}" class="primary-link">Add clothes</a></div>
+            <div class="empty-state glass-card">
+                <img src="{% static 'images/no-image.png' %}" alt="No items">
+                <h3>No clothes yet</h3>
+                <p>Add a few clothes first so your stylist has something to work with.</p>
+                <a href="{% url 'add_clothing_item' %}" class="primary-link">Add clothes</a>
+            </div>
         {% endfor %}
     </section>
 </main>
-<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a><a href="{% url 'stylist' %}" class="active">✨<small>Stylist</small></a></nav>
+
+<nav class="bottom-nav">
+    <a href="{% url 'dashboard' %}">⌂<small>Home</small></a>
+    <a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a>
+    <a href="{% url 'stylist' %}" class="active">✨<small>Stylist</small></a>
+</nav>
+
+<script>
+const questionInput = document.getElementById('stylistQuestion');
+document.querySelectorAll('.quick-question').forEach(button => {
+    button.addEventListener('click', () => {
+        questionInput.value = button.dataset.question || button.textContent.trim();
+        questionInput.focus();
+    });
+});
+</script>
 </body>
 </html>

@@ -24,6 +24,9 @@ Analyze the uploaded clothing image visually.
 
 Return ONLY valid JSON with these keys:
 {
+  "is_clothing_image": true,
+  "confidence": 0,
+  "rejection_reason": "",
   "name": "short natural item name",
   "category": "custom but simple category",
   "color": "main visible colors",
@@ -33,14 +36,17 @@ Return ONLY valid JSON with these keys:
   "fit_silhouette": "fit and silhouette",
   "occasion": "best occasion",
   "season": "best season",
+  "accessories": ["accessory 1", "accessory 2", "accessory 3"],
   "is_complete_outfit": true or false,
-  "styling_notes": "2-3 useful stylist sentences"
+  "styling_notes": "3-5 useful stylist sentences"
 }
 
 Rules:
-- Be visually specific.
+- If the image is not clearly clothing, outfit, footwear, bag, or fashion accessory, return is_clothing_image=false and explain rejection_reason.
+- Be visually specific. Do not give generic styling lines.
 - Do not invent luxury brands.
-- If it is a complete outfit like saree, gown, lehenga, jumpsuit, dress, or frock, do not force clothing pairings. Suggest accessories, footwear, layering, hairstyle, and occasion styling.
+- If the image has jeans + top or multiple main garments worn together, treat it as a two-piece outfit or complete outfit and mention each piece in tags.
+- If it is a complete outfit like saree, gown, lehenga, jumpsuit, dress, co-ord set, or frock, do not force clothing pairings. Suggest accessories, footwear, layering, hairstyle, and occasion styling.
 - If it is a pairable item like shirt, top, jeans, skirt, trouser, blazer, jacket, shoes, or bag, suggest realistic pairings.
 - Keep name, category, and color short enough for a wardrobe form.
 """.strip()
@@ -178,6 +184,9 @@ def _analyze_clothing_image(image_bytes, content_type):
         return {"error": f"AI analysis failed: {exc}"}
 
     return {
+        "is_clothing_image": bool(data.get("is_clothing_image", True)),
+        "confidence": data.get("confidence", 0),
+        "rejection_reason": str(data.get("rejection_reason") or "").strip(),
         "name": str(data.get("name") or "").strip(),
         "category": str(data.get("category") or "").strip(),
         "color": str(data.get("color") or "").strip(),
@@ -187,6 +196,7 @@ def _analyze_clothing_image(image_bytes, content_type):
         "fit_silhouette": str(data.get("fit_silhouette") or "").strip(),
         "occasion": str(data.get("occasion") or "").strip(),
         "season": str(data.get("season") or "").strip(),
+        "accessories": data.get("accessories") if isinstance(data.get("accessories"), list) else [],
         "is_complete_outfit": bool(data.get("is_complete_outfit")),
         "styling_notes": str(data.get("styling_notes") or "").strip(),
     }
@@ -223,6 +233,15 @@ def add_clothing_item_ai_view(request):
             category=category,
             color=color,
             image=image_path or None,
+            tags=request.POST.get("tags", "").strip(),
+            garment_type=request.POST.get("garment_type", "").strip(),
+            aesthetic=request.POST.get("aesthetic", "").strip(),
+            fit_silhouette=request.POST.get("fit_silhouette", "").strip(),
+            occasion=request.POST.get("occasion", "").strip(),
+            season=request.POST.get("season", "").strip(),
+            accessories=request.POST.get("accessories", "").strip(),
+            styling_notes=request.POST.get("styling_notes", "").strip(),
+            is_complete_outfit=request.POST.get("is_complete_outfit") == "true",
         )
         messages.success(request, "AI-filled clothing item saved successfully.")
         return redirect("dashboard")
@@ -251,6 +270,14 @@ def add_clothing_item_ai_view(request):
         analysis = _analyze_clothing_image(image_bytes, uploaded_image.content_type)
         if analysis.get("error"):
             messages.error(request, analysis["error"])
+        elif not analysis.get("is_clothing_image", True):
+            messages.error(
+                request,
+                analysis.get("rejection_reason") or "Please upload a clear clothing, outfit, footwear, bag, or fashion accessory image.",
+            )
+            analysis = None
+            saved_path = ""
+            image_url = ""
         else:
             messages.success(request, "AI analyzed your image. Review the details and edit anything before saving.")
 
@@ -291,6 +318,113 @@ def delete_clothing_item_view(request, item_id):
 
 
 
+
+def _wardrobe_context_for_ai(clothing_items):
+    if not clothing_items.exists():
+        return "User has no wardrobe items yet. Ask them to add clothes first."
+
+    lines = []
+    for item in clothing_items[:80]:
+        details = [
+            f"name: {item.name}",
+            f"category: {item.category}",
+            f"color: {item.color}",
+        ]
+        optional_fields = [
+            ("tags", getattr(item, "tags", "")),
+            ("garment_type", getattr(item, "garment_type", "")),
+            ("aesthetic", getattr(item, "aesthetic", "")),
+            ("fit", getattr(item, "fit_silhouette", "")),
+            ("occasion", getattr(item, "occasion", "")),
+            ("season", getattr(item, "season", "")),
+            ("accessories", getattr(item, "accessories", "")),
+            ("styling_notes", getattr(item, "styling_notes", "")),
+        ]
+        for label, value in optional_fields:
+            value = str(value or "").strip()
+            if value:
+                details.append(f"{label}: {value}")
+        if getattr(item, "is_complete_outfit", False):
+            details.append("complete_outfit: yes")
+        lines.append("- " + " | ".join(details))
+    return "\n".join(lines)
+
+
+def _local_stylist_reply(question, clothing_items):
+    total = clothing_items.count()
+    if total == 0:
+        return (
+            "Add at least 3-5 clothing items first so I can style from your actual wardrobe. "
+            "Start with one top, one bottom, footwear, and one occasion piece."
+        )
+
+    first_items = list(clothing_items[:5])
+    names = ", ".join([item.name for item in first_items])
+    return (
+        "I can see your saved wardrobe, but AI chat is not active yet because OPENAI_API_KEY is missing or quota is unavailable.\n\n"
+        f"Quick closet-based idea: start with {first_items[0].name}, then match it with items in similar or neutral colors. "
+        f"Some items I can use from your closet are: {names}.\n\n"
+        "For full personal stylist answers, add API billing/credits and keep OPENAI_API_KEY in Render Environment Variables."
+    )
+
+
+def _generate_stylist_reply(question, clothing_items):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        return _local_stylist_reply(question, clothing_items)
+
+    try:
+        from openai import OpenAI
+    except ImportError:
+        return "The openai package is missing. Add openai to requirements.txt, redeploy, and try again."
+
+    wardrobe_context = _wardrobe_context_for_ai(clothing_items)
+    system_prompt = """
+You are a warm, practical personal AI fashion stylist inside a digital wardrobe app.
+You must answer using the user's saved wardrobe context first.
+Do not give generic fashion advice unless the closet has no matching item.
+If a suitable item is missing, say it clearly as a missing piece suggestion.
+For every outfit suggestion, include:
+- exact saved clothing items to use when possible
+- occasion
+- season/weather suitability
+- accessories/footwear
+- why the combination works
+Keep answer friendly, concise, and useful on mobile.
+Never claim you can see images live in this chat; use saved item data only.
+""".strip()
+
+    user_prompt = f"""
+User question:
+{question}
+
+Saved wardrobe items:
+{wardrobe_context}
+""".strip()
+
+    try:
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=os.environ.get("OPENAI_STYLIST_MODEL", "gpt-4o-mini"),
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.45,
+            max_tokens=650,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as exc:
+        message = str(exc)
+        if "insufficient_quota" in message or "429" in message:
+            return (
+                "AI stylist could not run because the OpenAI API quota/credits are unavailable. "
+                "Add billing or credits in OpenAI Platform, then try again.\n\n"
+                + _local_stylist_reply(question, clothing_items)
+            )
+        return f"AI stylist failed: {exc}"
+
+
 @login_required(login_url="login")
 def stylist_view(request):
     clothing_items = ClothingItem.objects.filter(user=request.user)
@@ -304,17 +438,29 @@ def stylist_view(request):
         .annotate(item_count=Count("id"))
         .order_by("color")
     )
-    featured_items = clothing_items[:6]
+    featured_items = clothing_items[:8]
+
+    user_question = ""
+    assistant_reply = ""
+
+    if request.method == "POST":
+        user_question = request.POST.get("question", "").strip()
+        if len(user_question) < 3:
+            messages.error(request, "Please ask a slightly longer styling question.")
+        else:
+            assistant_reply = _generate_stylist_reply(user_question, clothing_items)
 
     if clothing_items.exists():
-        suggestion = (
-            "Pick one favorite item, then build around its color and occasion. "
-            "Soon this page can become your full AI personal stylist chatbot."
-        )
+        suggestion = "Ask anything like: What should I wear for college, office, a party, winter, summer, or with one saved item?"
     else:
-        suggestion = (
-            "Add a few wardrobe items first. Then your stylist can understand your closet better."
-        )
+        suggestion = "Add a few wardrobe items first. Then your stylist can understand your closet better."
+
+    suggested_questions = [
+        "What should I wear today from my wardrobe?",
+        "Create a casual outfit using my saved clothes.",
+        "Suggest a party look from my closet.",
+        "What accessories or footwear should I add?",
+    ]
 
     return render(
         request,
@@ -324,6 +470,10 @@ def stylist_view(request):
             "categories": categories,
             "colors": colors,
             "featured_items": featured_items,
+            "user_question": user_question,
+            "assistant_reply": assistant_reply,
+            "suggested_questions": suggested_questions,
+            "total_items": clothing_items.count(),
         },
     )
 

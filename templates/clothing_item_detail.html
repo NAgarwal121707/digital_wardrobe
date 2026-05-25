@@ -1,36 +1,90 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>{{ clothing_item.name }} | Digital Wardrobe</title><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><link rel="stylesheet" href="{% static 'css/styles.css' %}"></head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ clothing_item.name }}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
 <body class="detail-page">
-<main class="detail-shell">
-    <header class="form-topbar"><a href="{% url 'dashboard' %}" class="brand-mini"><span>DW</span><div><strong>Digital Wardrobe</strong><small>Back to closet</small></div></a><a href="{% url 'dashboard' %}" class="ghost-link">Back</a></header>
-    <section class="detail-card glass-card animate-rise">
-        <div class="detail-image-box">
-            {% if clothing_item.image %}<img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image available">{% endif %}
-            <span class="category-badge detail-badge">{{ clothing_item.category }}</span>
-        </div>
-        <div class="detail-info-box">
-            <p class="eyebrow">Clothing Item</p>
-            <h1>{{ clothing_item.name }}</h1>
-            <div class="detail-meta"><span>🏷️ {{ clothing_item.category }}</span><span>🎨 {{ clothing_item.color }}</span></div>
-            <p class="stylist-tip">✨ Stylist tip: Use this item as the hero piece and pair it with a clean neutral or matching accent from your closet.</p>
-            <div class="detail-actions"><a href="{% url 'edit_clothing_item' clothing_item.id %}" class="primary-button">Edit Item</a><a href="{% url 'delete_clothing_item' clothing_item.id %}" class="danger-link">Delete</a></div>
-        </div>
-    </section>
 
-    {% if related_items %}
-    <section class="section-title-row related-title"><div><h2>Similar category</h2><p>More from {{ clothing_item.category }}</p></div></section>
-    <section class="clothes-grid related-grid">
-        {% for item in related_items %}
-        <a class="clothing-card glass-card" href="{% url 'clothing_item_detail' item.id %}">
-            <div class="clothing-img-wrap">{% if item.image %}<img src="{{ item.image.url }}" alt="{{ item.name }}">{% else %}<img src="{% static 'images/no-image.png' %}" alt="No image available">{% endif %}<span class="category-badge">{{ item.category }}</span></div>
-            <div class="clothing-info"><h3>{{ item.name }}</h3><small>{{ item.color }}</small></div>
-        </a>
-        {% endfor %}
-    </section>
-    {% endif %}
-</main>
-<nav class="bottom-nav"><a href="{% url 'dashboard' %}" class="active">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a><a href="{% url 'stylist' %}">✨<small>Stylist</small></a></nav>
+<div class="detail-shell">
+
+    <a href="{% url 'dashboard' %}" class="back-btn">← Back</a>
+
+    <div class="detail-card glass-card">
+
+        <div class="detail-image-wrap">
+            {% if clothing_item.image %}
+                <img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}">
+            {% else %}
+                <img src="{% static 'images/no-image.png' %}" alt="No image">
+            {% endif %}
+
+            <span class="image-category-badge detail-badge">
+                {{ clothing_item.category }}
+            </span>
+        </div>
+
+        <div class="detail-content">
+
+            <h1>{{ clothing_item.name }}</h1>
+
+            <div class="detail-tags">
+                <span>🎨 {{ clothing_item.color }}</span>
+                {% if clothing_item.season %}
+                <span>☀️ {{ clothing_item.season }}</span>
+                {% endif %}
+                {% if clothing_item.occasion %}
+                <span>🎉 {{ clothing_item.occasion }}</span>
+                {% endif %}
+            </div>
+
+            {% if clothing_item.aesthetic %}
+            <div class="ai-section">
+                <h3>Aesthetic</h3>
+                <p>{{ clothing_item.aesthetic }}</p>
+            </div>
+            {% endif %}
+
+            {% if clothing_item.fit_silhouette %}
+            <div class="ai-section">
+                <h3>Fit & Silhouette</h3>
+                <p>{{ clothing_item.fit_silhouette }}</p>
+            </div>
+            {% endif %}
+
+            {% if clothing_item.tags %}
+            <div class="ai-section">
+                <h3>AI Tags</h3>
+                <p>{{ clothing_item.tags }}</p>
+            </div>
+            {% endif %}
+
+            {% if clothing_item.accessories %}
+            <div class="ai-section">
+                <h3>Suggested Accessories</h3>
+                <p>{{ clothing_item.accessories }}</p>
+            </div>
+            {% endif %}
+
+            {% if clothing_item.styling_notes %}
+            <div class="ai-section stylist-box">
+                <h3>✨ AI Stylist Suggestions</h3>
+                <p>{{ clothing_item.styling_notes }}</p>
+            </div>
+            {% endif %}
+
+                    <div class="detail-actions">
+                <a href="{% url 'edit_clothing_item' clothing_item.id %}" class="primary-link">Edit Item</a>
+                <a href="{% url 'stylist' %}" class="ghost-link">Ask Stylist</a>
+                <a href="{% url 'delete_clothing_item' clothing_item.id %}" class="ghost-link danger-link">Delete</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
