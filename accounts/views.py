@@ -350,48 +350,94 @@ def _wardrobe_context_for_ai(clothing_items):
     return "\n".join(lines)
 
 
-def _local_stylist_reply(question, clothing_items):
+def _compact_list(value, max_items=4):
+    if not value:
+        return []
+    if isinstance(value, list):
+        items = value
+    else:
+        items = [part.strip() for part in str(value).replace("\n", ",").split(",")]
+    return [str(item).strip() for item in items if str(item).strip()][:max_items]
+
+
+def _local_stylist_plan(question, clothing_items):
     total = clothing_items.count()
     if total == 0:
-        return (
-            "Add at least 3-5 clothing items first so I can style from your actual wardrobe. "
-            "Start with one top, one bottom, footwear, and one occasion piece."
-        )
+        return {
+            "summary": "Add a few clothes first so I can style from your real wardrobe.",
+            "best_match_title": "Start your closet",
+            "best_match_note": "Upload one top, one bottom, footwear, and one occasion outfit.",
+            "wardrobe_items": [],
+            "outfit_ideas": [],
+            "accessories": ["Simple hoops", "Neutral bag", "Clean sneakers"],
+            "season": "All season",
+            "occasion": "Daily styling",
+            "missing_piece": "Add 3-5 wardrobe items for smarter suggestions.",
+            "quick_tip": "Once items are saved, I can suggest real combinations from your closet.",
+            "error_note": "",
+        }
 
-    first_items = list(clothing_items[:5])
-    names = ", ".join([item.name for item in first_items])
-    return (
-        "I can see your saved wardrobe, but AI chat is not active yet because OPENAI_API_KEY is missing or quota is unavailable.\n\n"
-        f"Quick closet-based idea: start with {first_items[0].name}, then match it with items in similar or neutral colors. "
-        f"Some items I can use from your closet are: {names}.\n\n"
-        "For full personal stylist answers, add API billing/credits and keep OPENAI_API_KEY in Render Environment Variables."
-    )
+    first_items = list(clothing_items[:4])
+    outfit_names = [item.name for item in first_items[:3]]
+    first = first_items[0]
+    return {
+        "summary": "Here is a quick closet-based idea using your saved clothes.",
+        "best_match_title": first.name,
+        "best_match_note": f"Use {first.name} as the main piece and keep the rest clean and balanced.",
+        "wardrobe_items": outfit_names,
+        "outfit_ideas": [
+            f"Start with {first.name}",
+            "Add a neutral or matching color from your closet",
+            "Keep accessories simple so the outfit looks intentional",
+        ],
+        "accessories": ["Minimal earrings", "Structured bag", "Clean footwear"],
+        "season": getattr(first, "season", "All season") or "All season",
+        "occasion": getattr(first, "occasion", "Casual outing") or "Casual outing",
+        "missing_piece": "AI quota/key is missing, so this is a local fallback suggestion.",
+        "quick_tip": "Keep the outfit to 2-3 main colors for a polished look.",
+        "error_note": "For full AI stylist replies, add API credits and OPENAI_API_KEY in Render.",
+    }
 
 
-def _generate_stylist_reply(question, clothing_items):
+def _generate_stylist_plan(question, clothing_items):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        return _local_stylist_reply(question, clothing_items)
+        return _local_stylist_plan(question, clothing_items)
 
     try:
         from openai import OpenAI
     except ImportError:
-        return "The openai package is missing. Add openai to requirements.txt, redeploy, and try again."
+        plan = _local_stylist_plan(question, clothing_items)
+        plan["error_note"] = "The openai package is missing. Add openai to requirements.txt, redeploy, and try again."
+        return plan
 
     wardrobe_context = _wardrobe_context_for_ai(clothing_items)
     system_prompt = """
 You are a warm, practical personal AI fashion stylist inside a digital wardrobe app.
-You must answer using the user's saved wardrobe context first.
-Do not give generic fashion advice unless the closet has no matching item.
-If a suitable item is missing, say it clearly as a missing piece suggestion.
-For every outfit suggestion, include:
-- exact saved clothing items to use when possible
-- occasion
-- season/weather suitability
-- accessories/footwear
-- why the combination works
-Keep answer friendly, concise, and useful on mobile.
-Never claim you can see images live in this chat; use saved item data only.
+Answer using the user's saved wardrobe context first.
+Return ONLY valid JSON. No markdown. No long paragraph.
+
+JSON schema:
+{
+  "summary": "one short sentence under 18 words",
+  "best_match_title": "short title for the look",
+  "best_match_note": "one short useful reason",
+  "wardrobe_items": ["saved item name 1", "saved item name 2"],
+  "outfit_ideas": ["short outfit step 1", "short outfit step 2", "short outfit step 3"],
+  "accessories": ["accessory 1", "accessory 2", "accessory 3"],
+  "season": "best season/weather",
+  "occasion": "best occasion",
+  "missing_piece": "what user may add if needed, or empty string",
+  "quick_tip": "one short styling tip"
+}
+
+Rules:
+- Keep every field short and mobile friendly.
+- Use saved wardrobe item names when possible.
+- If a matching item is missing, suggest the missing piece clearly.
+- Do not write long paragraphs.
+- Do not claim you can see live images in chat; use saved wardrobe data only.
+- Make suggestions visual: accessories, footwear, occasion, season, color pairing.
 """.strip()
 
     user_prompt = f"""
@@ -410,19 +456,33 @@ Saved wardrobe items:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
+            response_format={"type": "json_object"},
             temperature=0.45,
-            max_tokens=650,
+            max_tokens=450,
         )
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content or "{}"
+        data = json.loads(content)
+        return {
+            "summary": str(data.get("summary") or "Here is a clean outfit idea from your wardrobe.").strip(),
+            "best_match_title": str(data.get("best_match_title") or "Styled look").strip(),
+            "best_match_note": str(data.get("best_match_note") or "Balanced colors and practical styling.").strip(),
+            "wardrobe_items": _compact_list(data.get("wardrobe_items"), 4),
+            "outfit_ideas": _compact_list(data.get("outfit_ideas"), 4),
+            "accessories": _compact_list(data.get("accessories"), 5),
+            "season": str(data.get("season") or "All season").strip(),
+            "occasion": str(data.get("occasion") or "Casual").strip(),
+            "missing_piece": str(data.get("missing_piece") or "").strip(),
+            "quick_tip": str(data.get("quick_tip") or "Keep the outfit to 2-3 colors.").strip(),
+            "error_note": "",
+        }
     except Exception as exc:
+        plan = _local_stylist_plan(question, clothing_items)
         message = str(exc)
         if "insufficient_quota" in message or "429" in message:
-            return (
-                "AI stylist could not run because the OpenAI API quota/credits are unavailable. "
-                "Add billing or credits in OpenAI Platform, then try again.\n\n"
-                + _local_stylist_reply(question, clothing_items)
-            )
-        return f"AI stylist failed: {exc}"
+            plan["error_note"] = "OpenAI quota/credits are unavailable, so this is a local fallback suggestion."
+        else:
+            plan["error_note"] = f"AI stylist failed, so this is a local fallback suggestion: {exc}"
+        return plan
 
 
 @login_required(login_url="login")
@@ -441,14 +501,14 @@ def stylist_view(request):
     featured_items = clothing_items[:8]
 
     user_question = ""
-    assistant_reply = ""
+    style_plan = None
 
     if request.method == "POST":
         user_question = request.POST.get("question", "").strip()
         if len(user_question) < 3:
             messages.error(request, "Please ask a slightly longer styling question.")
         else:
-            assistant_reply = _generate_stylist_reply(user_question, clothing_items)
+            style_plan = _generate_stylist_plan(user_question, clothing_items)
 
     if clothing_items.exists():
         suggestion = "Ask anything like: What should I wear for college, office, a party, winter, summer, or with one saved item?"
@@ -471,7 +531,7 @@ def stylist_view(request):
             "colors": colors,
             "featured_items": featured_items,
             "user_question": user_question,
-            "assistant_reply": assistant_reply,
+            "style_plan": style_plan,
             "suggested_questions": suggested_questions,
             "total_items": clothing_items.count(),
         },
