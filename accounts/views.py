@@ -52,6 +52,46 @@ Rules:
 """.strip()
 
 
+AI_WARDROBE_SCAN_PROMPT = """
+You are a professional AI wardrobe scanner with strong visual understanding.
+The user may upload 1 to 5 wardrobe/closet photos. Detect visible fashion items and return ONLY valid JSON.
+
+Return format:
+{
+  "is_wardrobe_image": true,
+  "rejection_reason": "",
+  "items": [
+    {
+      "source_image_index": 0,
+      "name": "short item name",
+      "category": "simple custom category",
+      "color": "main visible color",
+      "tags": ["tag 1", "tag 2"],
+      "garment_type": "specific garment type",
+      "aesthetic": "fashion vibe",
+      "fit_silhouette": "short fit/silhouette if visible",
+      "occasion": "best occasion",
+      "season": "best season",
+      "accessories": ["accessory idea 1", "accessory idea 2"],
+      "is_complete_outfit": false,
+      "styling_notes": "1-2 short useful styling lines"
+    }
+  ]
+}
+
+Rules:
+- Detect multiple visible clothes, footwear, bags, or fashion accessories.
+- If the photo is not a wardrobe/closet/clothing/fashion image, set is_wardrobe_image=false.
+- Do not invent hidden items. Only list visible and reasonably identifiable items.
+- If a rack/shelf is crowded, list the most clear items first.
+- If multiple items are worn together as an outfit, create one Complete Outfit entry and mention pieces in tags.
+- For hanging/shelf wardrobe photos, create separate entries for visible different garments.
+- Avoid duplicate entries for the same obvious item.
+- Keep each item short because user will review/edit before saving.
+- source_image_index must be 0 for first uploaded image, 1 for second, etc.
+""".strip()
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
@@ -202,6 +242,169 @@ def _analyze_clothing_image(image_bytes, content_type):
     }
 
 
+
+def _analyze_wardrobe_scan_images(image_payloads):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        return {
+            "error": "OPENAI_API_KEY is missing. Add it in Render Environment Variables to enable AI wardrobe scanning.",
+        }
+
+    try:
+        from openai import OpenAI
+    except ImportError:
+        return {"error": "The openai package is missing. Add openai to requirements.txt and redeploy."}
+
+    content = [{"type": "text", "text": AI_WARDROBE_SCAN_PROMPT}]
+    for payload in image_payloads:
+        encoded_image = base64.b64encode(payload["bytes"]).decode("utf-8")
+        image_data_url = f"data:{payload['content_type']};base64,{encoded_image}"
+        content.append(
+            {
+                "type": "image_url",
+                "image_url": {"url": image_data_url, "detail": "high"},
+            }
+        )
+
+    try:
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=os.environ.get("OPENAI_VISION_MODEL", "gpt-4o-mini"),
+            messages=[{"role": "user", "content": content}],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+            max_tokens=2200,
+        )
+        data = json.loads(response.choices[0].message.content or "{}")
+    except Exception as exc:
+        return {"error": f"AI wardrobe scan failed: {exc}"}
+
+    items = data.get("items") if isinstance(data.get("items"), list) else []
+    cleaned_items = []
+    for item in items[:40]:
+        if not isinstance(item, dict):
+            continue
+        try:
+            source_index = int(item.get("source_image_index", 0))
+        except (TypeError, ValueError):
+            source_index = 0
+        cleaned_items.append(
+            {
+                "source_image_index": max(0, min(source_index, len(image_payloads) - 1)),
+                "name": str(item.get("name") or "").strip(),
+                "category": str(item.get("category") or "Uncategorized").strip(),
+                "color": str(item.get("color") or "Not specified").strip(),
+                "tags": ", ".join(item.get("tags", [])) if isinstance(item.get("tags"), list) else str(item.get("tags") or ""),
+                "garment_type": str(item.get("garment_type") or "").strip(),
+                "aesthetic": str(item.get("aesthetic") or "").strip(),
+                "fit_silhouette": str(item.get("fit_silhouette") or "").strip(),
+                "occasion": str(item.get("occasion") or "").strip(),
+                "season": str(item.get("season") or "").strip(),
+                "accessories": ", ".join(item.get("accessories", [])) if isinstance(item.get("accessories"), list) else str(item.get("accessories") or ""),
+                "is_complete_outfit": bool(item.get("is_complete_outfit")),
+                "styling_notes": str(item.get("styling_notes") or "").strip(),
+            }
+        )
+
+    return {
+        "is_wardrobe_image": bool(data.get("is_wardrobe_image", True)),
+        "rejection_reason": str(data.get("rejection_reason") or "").strip(),
+        "items": cleaned_items,
+    }
+
+
+@login_required(login_url="login")
+def scan_wardrobe_ai_view(request):
+    context = {"detected_items": [], "image_paths": [], "image_urls": []}
+
+    if request.method == "POST" and request.POST.get("action") == "save_detected_items":
+        selected_indexes = request.POST.getlist("selected_items")
+        saved_count = 0
+
+        for index in selected_indexes:
+            prefix = f"item_{index}_"
+            name = request.POST.get(prefix + "name", "").strip()
+            if len(name) < 2:
+                continue
+            ClothingItem.objects.create(
+                user=request.user,
+                name=name,
+                category=request.POST.get(prefix + "category", "").strip() or "Uncategorized",
+                color=request.POST.get(prefix + "color", "").strip() or "Not specified",
+                image=request.POST.get(prefix + "image_path", "").strip() or None,
+                tags=request.POST.get(prefix + "tags", "").strip(),
+                garment_type=request.POST.get(prefix + "garment_type", "").strip(),
+                aesthetic=request.POST.get(prefix + "aesthetic", "").strip(),
+                fit_silhouette=request.POST.get(prefix + "fit_silhouette", "").strip(),
+                occasion=request.POST.get(prefix + "occasion", "").strip(),
+                season=request.POST.get(prefix + "season", "").strip(),
+                accessories=request.POST.get(prefix + "accessories", "").strip(),
+                styling_notes=request.POST.get(prefix + "styling_notes", "").strip(),
+                is_complete_outfit=request.POST.get(prefix + "is_complete_outfit") == "true",
+            )
+            saved_count += 1
+
+        if saved_count:
+            messages.success(request, f"Saved {saved_count} detected wardrobe item{'s' if saved_count != 1 else ''}.")
+            return redirect("dashboard")
+        messages.error(request, "Please select at least one detected item to save.")
+        return render(request, "scan_wardrobe_ai.html", context)
+
+    if request.method == "POST":
+        uploaded_images = request.FILES.getlist("images")
+        if not uploaded_images:
+            messages.error(request, "Please upload 1 to 5 wardrobe photos.")
+            return render(request, "scan_wardrobe_ai.html", context)
+        if len(uploaded_images) > 5:
+            messages.error(request, "Please upload maximum 5 photos at once.")
+            return render(request, "scan_wardrobe_ai.html", context)
+
+        allowed_types = ["image/jpeg", "image/png", "image/webp"]
+        image_payloads = []
+        saved_paths = []
+        image_urls = []
+
+        for uploaded_image in uploaded_images:
+            if getattr(uploaded_image, "content_type", "") not in allowed_types:
+                messages.error(request, "Only JPG, PNG, or WEBP images are allowed.")
+                return render(request, "scan_wardrobe_ai.html", context)
+            if uploaded_image.size > 7 * 1024 * 1024:
+                messages.error(request, "Each image must be less than 7 MB.")
+                return render(request, "scan_wardrobe_ai.html", context)
+
+            image_bytes = uploaded_image.read()
+            ext = os.path.splitext(uploaded_image.name)[1] or ".jpg"
+            safe_path = f"wardrobe_scans/{request.user.id}/{uuid.uuid4().hex}{ext}"
+            saved_path = default_storage.save(safe_path, ContentFile(image_bytes))
+            saved_paths.append(saved_path)
+            image_urls.append(default_storage.url(saved_path))
+            image_payloads.append(
+                {"bytes": image_bytes, "content_type": uploaded_image.content_type, "saved_path": saved_path}
+            )
+
+        scan_result = _analyze_wardrobe_scan_images(image_payloads)
+        if scan_result.get("error"):
+            messages.error(request, scan_result["error"])
+        elif not scan_result.get("is_wardrobe_image", True):
+            messages.error(request, scan_result.get("rejection_reason") or "Please upload clear wardrobe or clothing photos.")
+        elif not scan_result.get("items"):
+            messages.error(request, "AI could not confidently detect clothing items. Try clearer, brighter wardrobe photos.")
+        else:
+            messages.success(request, f"AI detected {len(scan_result['items'])} possible wardrobe items. Review, edit, then save selected items.")
+            detected_items = []
+            for item in scan_result["items"]:
+                source_index = item.get("source_image_index", 0)
+                item["image_path"] = saved_paths[source_index] if saved_paths else ""
+                item["image_url"] = image_urls[source_index] if image_urls else ""
+                detected_items.append(item)
+            context["detected_items"] = detected_items
+
+        context["image_paths"] = saved_paths
+        context["image_urls"] = image_urls
+
+    return render(request, "scan_wardrobe_ai.html", context)
+
+
 @login_required(login_url="login")
 def add_clothing_item_ai_view(request):
     context = {
@@ -350,94 +553,46 @@ def _wardrobe_context_for_ai(clothing_items):
     return "\n".join(lines)
 
 
-def _compact_list(value, max_items=4):
-    if not value:
-        return []
-    if isinstance(value, list):
-        items = value
-    else:
-        items = [part.strip() for part in str(value).replace("\n", ",").split(",")]
-    return [str(item).strip() for item in items if str(item).strip()][:max_items]
-
-
-def _local_stylist_plan(question, clothing_items):
+def _local_stylist_reply(question, clothing_items):
     total = clothing_items.count()
     if total == 0:
-        return {
-            "summary": "Add a few clothes first so I can style from your real wardrobe.",
-            "best_match_title": "Start your closet",
-            "best_match_note": "Upload one top, one bottom, footwear, and one occasion outfit.",
-            "wardrobe_items": [],
-            "outfit_ideas": [],
-            "accessories": ["Simple hoops", "Neutral bag", "Clean sneakers"],
-            "season": "All season",
-            "occasion": "Daily styling",
-            "missing_piece": "Add 3-5 wardrobe items for smarter suggestions.",
-            "quick_tip": "Once items are saved, I can suggest real combinations from your closet.",
-            "error_note": "",
-        }
+        return (
+            "Add at least 3-5 clothing items first so I can style from your actual wardrobe. "
+            "Start with one top, one bottom, footwear, and one occasion piece."
+        )
 
-    first_items = list(clothing_items[:4])
-    outfit_names = [item.name for item in first_items[:3]]
-    first = first_items[0]
-    return {
-        "summary": "Here is a quick closet-based idea using your saved clothes.",
-        "best_match_title": first.name,
-        "best_match_note": f"Use {first.name} as the main piece and keep the rest clean and balanced.",
-        "wardrobe_items": outfit_names,
-        "outfit_ideas": [
-            f"Start with {first.name}",
-            "Add a neutral or matching color from your closet",
-            "Keep accessories simple so the outfit looks intentional",
-        ],
-        "accessories": ["Minimal earrings", "Structured bag", "Clean footwear"],
-        "season": getattr(first, "season", "All season") or "All season",
-        "occasion": getattr(first, "occasion", "Casual outing") or "Casual outing",
-        "missing_piece": "AI quota/key is missing, so this is a local fallback suggestion.",
-        "quick_tip": "Keep the outfit to 2-3 main colors for a polished look.",
-        "error_note": "For full AI stylist replies, add API credits and OPENAI_API_KEY in Render.",
-    }
+    first_items = list(clothing_items[:5])
+    names = ", ".join([item.name for item in first_items])
+    return (
+        "I can see your saved wardrobe, but AI chat is not active yet because OPENAI_API_KEY is missing or quota is unavailable.\n\n"
+        f"Quick closet-based idea: start with {first_items[0].name}, then match it with items in similar or neutral colors. "
+        f"Some items I can use from your closet are: {names}.\n\n"
+        "For full personal stylist answers, add API billing/credits and keep OPENAI_API_KEY in Render Environment Variables."
+    )
 
 
-def _generate_stylist_plan(question, clothing_items):
+def _generate_stylist_reply(question, clothing_items):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        return _local_stylist_plan(question, clothing_items)
+        return _local_stylist_reply(question, clothing_items)
 
     try:
         from openai import OpenAI
     except ImportError:
-        plan = _local_stylist_plan(question, clothing_items)
-        plan["error_note"] = "The openai package is missing. Add openai to requirements.txt, redeploy, and try again."
-        return plan
+        return "The openai package is missing. Add openai to requirements.txt, redeploy, and try again."
 
     wardrobe_context = _wardrobe_context_for_ai(clothing_items)
     system_prompt = """
 You are a warm, practical personal AI fashion stylist inside a digital wardrobe app.
 Answer using the user's saved wardrobe context first.
-Return ONLY valid JSON. No markdown. No long paragraph.
-
-JSON schema:
-{
-  "summary": "one short sentence under 18 words",
-  "best_match_title": "short title for the look",
-  "best_match_note": "one short useful reason",
-  "wardrobe_items": ["saved item name 1", "saved item name 2"],
-  "outfit_ideas": ["short outfit step 1", "short outfit step 2", "short outfit step 3"],
-  "accessories": ["accessory 1", "accessory 2", "accessory 3"],
-  "season": "best season/weather",
-  "occasion": "best occasion",
-  "missing_piece": "what user may add if needed, or empty string",
-  "quick_tip": "one short styling tip"
-}
-
-Rules:
-- Keep every field short and mobile friendly.
-- Use saved wardrobe item names when possible.
-- If a matching item is missing, suggest the missing piece clearly.
-- Do not write long paragraphs.
-- Do not claim you can see live images in chat; use saved wardrobe data only.
-- Make suggestions visual: accessories, footwear, occasion, season, color pairing.
+Keep responses very short and visual-card friendly.
+Use this format exactly:
+✨ Style Summary: one short line
+👗 Use from your wardrobe: item names from saved closet only
+🧩 Add / Wishlist: missing pieces if needed
+👜 Accessories: short accessories ideas
+☀️ Best for: occasion + season/weather
+Avoid long paragraphs. Never give generic advice. Never claim you can see live images in chat; use saved item data.
 """.strip()
 
     user_prompt = f"""
@@ -456,33 +611,34 @@ Saved wardrobe items:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            response_format={"type": "json_object"},
             temperature=0.45,
-            max_tokens=450,
+            max_tokens=650,
         )
-        content = response.choices[0].message.content or "{}"
-        data = json.loads(content)
-        return {
-            "summary": str(data.get("summary") or "Here is a clean outfit idea from your wardrobe.").strip(),
-            "best_match_title": str(data.get("best_match_title") or "Styled look").strip(),
-            "best_match_note": str(data.get("best_match_note") or "Balanced colors and practical styling.").strip(),
-            "wardrobe_items": _compact_list(data.get("wardrobe_items"), 4),
-            "outfit_ideas": _compact_list(data.get("outfit_ideas"), 4),
-            "accessories": _compact_list(data.get("accessories"), 5),
-            "season": str(data.get("season") or "All season").strip(),
-            "occasion": str(data.get("occasion") or "Casual").strip(),
-            "missing_piece": str(data.get("missing_piece") or "").strip(),
-            "quick_tip": str(data.get("quick_tip") or "Keep the outfit to 2-3 colors.").strip(),
-            "error_note": "",
-        }
+        return response.choices[0].message.content.strip()
     except Exception as exc:
-        plan = _local_stylist_plan(question, clothing_items)
         message = str(exc)
         if "insufficient_quota" in message or "429" in message:
-            plan["error_note"] = "OpenAI quota/credits are unavailable, so this is a local fallback suggestion."
-        else:
-            plan["error_note"] = f"AI stylist failed, so this is a local fallback suggestion: {exc}"
-        return plan
+            return (
+                "AI stylist could not run because the OpenAI API quota/credits are unavailable. "
+                "Add billing or credits in OpenAI Platform, then try again.\n\n"
+                + _local_stylist_reply(question, clothing_items)
+            )
+        return f"AI stylist failed: {exc}"
+
+
+
+def _visual_items_for_reply(question, assistant_reply, clothing_items):
+    text_blob = f"{question} {assistant_reply}".lower()
+    matched = []
+    for item in clothing_items:
+        checks = [item.name, item.category, item.color, getattr(item, "garment_type", ""), getattr(item, "tags", "")]
+        if any(str(value or "").lower() and str(value or "").lower() in text_blob for value in checks):
+            matched.append(item)
+        if len(matched) >= 6:
+            break
+    if not matched:
+        matched = list(clothing_items[:6])
+    return matched
 
 
 @login_required(login_url="login")
@@ -501,14 +657,16 @@ def stylist_view(request):
     featured_items = clothing_items[:8]
 
     user_question = ""
-    style_plan = None
+    assistant_reply = ""
 
     if request.method == "POST":
         user_question = request.POST.get("question", "").strip()
         if len(user_question) < 3:
             messages.error(request, "Please ask a slightly longer styling question.")
         else:
-            style_plan = _generate_stylist_plan(user_question, clothing_items)
+            assistant_reply = _generate_stylist_reply(user_question, clothing_items)
+
+    visual_suggestion_items = _visual_items_for_reply(user_question, assistant_reply, clothing_items) if assistant_reply else []
 
     if clothing_items.exists():
         suggestion = "Ask anything like: What should I wear for college, office, a party, winter, summer, or with one saved item?"
@@ -531,7 +689,8 @@ def stylist_view(request):
             "colors": colors,
             "featured_items": featured_items,
             "user_question": user_question,
-            "style_plan": style_plan,
+            "assistant_reply": assistant_reply,
+            "visual_suggestion_items": visual_suggestion_items,
             "suggested_questions": suggested_questions,
             "total_items": clothing_items.count(),
         },

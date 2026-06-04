@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Build My Wardrobe with AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="form-page ai-scan-page">
+<main class="form-shell">
+    <header class="form-topbar">
+        <a href="{% url 'dashboard' %}" class="brand-mini"><span>AI</span><div><strong>Build My Wardrobe</strong><small>Scan 1–5 photos</small></div></a>
+        <a href="{% url 'add_clothing_item' %}" class="ghost-link">Back</a>
+    </header>
+
+    {% if messages %}
+        <section class="messages-wrap">
+            {% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="form-hero glass-card happy-float">
+        <div>
+            <p class="eyebrow">AI Wardrobe Scanner</p>
+            <h1>Upload closet photos. Let AI find your clothes.</h1>
+            <p>Upload 1–5 clear wardrobe, hanger, shelf, or outfit photos. AI will detect visible items, then you can edit and save selected entries.</p>
+        </div>
+        <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe scanner" class="hero-img">
+    </section>
+
+    <section class="form-card glass-card scan-upload-card">
+        <h2>Scan wardrobe photos</h2>
+        <p class="form-intro">Best results: good lighting, one wardrobe section per photo, avoid blurry/crowded photos.</p>
+        <form method="post" enctype="multipart/form-data" class="smart-form">
+            {% csrf_token %}
+            <div class="form-field">
+                <label for="scanImages">Choose 1–5 images</label>
+                <input id="scanImages" type="file" name="images" accept="image/*" multiple required>
+                <small class="field-help">You can upload hanging clothes, shelves, shoes, bags, or outfit photos.</small>
+            </div>
+            <button class="primary-button" type="submit">Detect clothes with AI ✨</button>
+        </form>
+    </section>
+
+    {% if image_urls %}
+        <section class="section-title-row scan-preview-title">
+            <div>
+                <h2>Uploaded photos</h2>
+                <p>These photos were used for detection.</p>
+            </div>
+        </section>
+        <section class="scan-photo-grid">
+            {% for image_url in image_urls %}
+                <div class="scan-photo-card glass-card"><img src="{{ image_url }}" alt="Uploaded wardrobe photo"></div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if detected_items %}
+        <section class="section-title-row scan-preview-title">
+            <div>
+                <h2>Review detected items</h2>
+                <p>Select what you want to save. You can edit anything before saving.</p>
+            </div>
+        </section>
+
+        <form method="post" class="detected-items-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_detected_items">
+
+            <section class="detected-items-grid">
+                {% for item in detected_items %}
+                    <article class="detected-item-card glass-card">
+                        <label class="save-check">
+                            <input type="checkbox" name="selected_items" value="{{ forloop.counter0 }}" checked>
+                            <span>Save this item</span>
+                        </label>
+
+                        {% if item.image_url %}
+                            <img src="{{ item.image_url }}" alt="Detected source photo" class="detected-source-img">
+                        {% endif %}
+
+                        <input type="hidden" name="item_{{ forloop.counter0 }}_image_path" value="{{ item.image_path }}">
+                        <input type="hidden" name="item_{{ forloop.counter0 }}_is_complete_outfit" value="{% if item.is_complete_outfit %}true{% else %}false{% endif %}">
+
+                        <div class="detected-fields">
+                            <label>Name<input name="item_{{ forloop.counter0 }}_name" value="{{ item.name }}" required></label>
+                            <label>Category<input name="item_{{ forloop.counter0 }}_category" value="{{ item.category }}"></label>
+                            <label>Color<input name="item_{{ forloop.counter0 }}_color" value="{{ item.color }}"></label>
+                            <label>Tags<input name="item_{{ forloop.counter0 }}_tags" value="{{ item.tags }}"></label>
+                            <label>Garment Type<input name="item_{{ forloop.counter0 }}_garment_type" value="{{ item.garment_type }}"></label>
+                            <label>Aesthetic<input name="item_{{ forloop.counter0 }}_aesthetic" value="{{ item.aesthetic }}"></label>
+                            <label>Fit/Silhouette<input name="item_{{ forloop.counter0 }}_fit_silhouette" value="{{ item.fit_silhouette }}"></label>
+                            <label>Occasion<input name="item_{{ forloop.counter0 }}_occasion" value="{{ item.occasion }}"></label>
+                            <label>Season<input name="item_{{ forloop.counter0 }}_season" value="{{ item.season }}"></label>
+                            <label>Accessories<input name="item_{{ forloop.counter0 }}_accessories" value="{{ item.accessories }}"></label>
+                            <label>Styling Notes<textarea name="item_{{ forloop.counter0 }}_styling_notes" rows="3">{{ item.styling_notes }}</textarea></label>
+                        </div>
+                    </article>
+                {% endfor %}
+            </section>
+
+            <div class="sticky-save-bar glass-card">
+                <span>Review done?</span>
+                <button type="submit" class="primary-button">Save selected items</button>
+            </div>
+        </form>
+    {% endif %}
+</main>
+
+<nav class="bottom-nav">
+    <a href="{% url 'dashboard' %}">⌂<small>Home</small></a>
+    <a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a>
+    <a href="{% url 'stylist' %}">✨<small>Stylist</small></a>
+</nav>
+</body>
+</html>

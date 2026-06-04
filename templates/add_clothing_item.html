@@ -23,8 +23,16 @@
         <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
     </section>
 
-    <section class="choice-grid">
-        <a href="{% url 'add_clothing_item_ai' %}" class="choice-card glass-card recommended-card">
+    <section class="choice-grid choice-grid-three">
+        <a href="{% url 'scan_wardrobe_ai' %}" class="choice-card glass-card recommended-card">
+            <span class="choice-icon">📸</span>
+            <small class="choice-badge">Fastest</small>
+            <h2>Build My Wardrobe with AI</h2>
+            <p>Upload 1–5 wardrobe photos. AI detects multiple visible clothes and prepares entries for you to review.</p>
+            <strong>Scan wardrobe →</strong>
+        </a>
+
+        <a href="{% url 'add_clothing_item_ai' %}" class="choice-card glass-card">
             <span class="choice-icon">✨</span>
             <small class="choice-badge">Recommended</small>
             <h2>Use Wardrobe AI Agent</h2>

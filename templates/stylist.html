@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body class="stylist-chat-page">
+<body class="dashboard-page stylist-chat-page">
 <main class="app-shell stylist-shell">
     <header class="app-header glass-card animate-drop">
         <a href="{% url 'dashboard' %}" class="icon-button" aria-label="Back">‹</a>
@@ -18,7 +18,7 @@
                 <small>{{ total_items }} wardrobe item{{ total_items|pluralize }}</small>
             </div>
         </div>
-        <a href="{% url 'add_clothing_item' %}" class="round-add" aria-label="Add item">＋</a>
+        <a href="{% url 'scan_wardrobe_ai' %}" class="round-add" aria-label="Scan wardrobe">📸</a>
     </header>
 
     {% if messages %}
@@ -27,144 +27,89 @@
         </section>
     {% endif %}
 
-    <section class="chat-intro-card glass-card">
+    <section class="stylist-hero glass-card animate-rise">
         <div>
-            <p class="eyebrow">Chat with your closet</p>
-            <h1>Ask like ChatGPT. Get visual outfit cards.</h1>
+            <p class="eyebrow">Wardrobe-aware AI</p>
+            <h1>Chat with your closet.</h1>
             <p>{{ suggestion }}</p>
         </div>
         <div class="stylist-bubble happy-float">✨</div>
     </section>
 
-    <section class="chat-window glass-card">
-        <div class="chat-thread">
-            <div class="chat-row ai-row">
-                <div class="avatar-dot">AI</div>
-                <div class="chat-message ai-message">
-                    <strong>Hi, I’m your wardrobe stylist.</strong>
-                    <p>Ask me what to wear, what to pair, or what accessories suit your saved clothes.</p>
-                </div>
+    <section class="stylist-chat-card glass-card">
+        <div class="chat-head">
+            <div>
+                <h2>Ask your stylist</h2>
+                <p>Short answers + visual cards from your actual saved wardrobe images.</p>
             </div>
-
-            {% if user_question %}
-                <div class="chat-row user-row">
-                    <div class="chat-message user-message">
-                        <p>{{ user_question }}</p>
-                    </div>
-                </div>
-            {% endif %}
-
-            {% if style_plan %}
-                <div class="chat-row ai-row">
-                    <div class="avatar-dot">AI</div>
-                    <div class="chat-message ai-message stylist-response-card">
-                        {% if style_plan.error_note %}
-                            <div class="mini-alert">{{ style_plan.error_note }}</div>
-                        {% endif %}
-
-                        <div class="style-summary-card">
-                            <span class="sparkle-icon">✨</span>
-                            <div>
-                                <small>Style summary</small>
-                                <h2>{{ style_plan.summary }}</h2>
-                                <p>{{ style_plan.best_match_note }}</p>
-                            </div>
-                        </div>
-
-                        <div class="suggestion-grid">
-                            <div class="suggestion-card main-look-card">
-                                <span>👗</span>
-                                <small>Best look</small>
-                                <strong>{{ style_plan.best_match_title }}</strong>
-                            </div>
-
-                            <div class="suggestion-card">
-                                <span>☀️</span>
-                                <small>Season</small>
-                                <strong>{{ style_plan.season }}</strong>
-                            </div>
-
-                            <div class="suggestion-card">
-                                <span>🎉</span>
-                                <small>Occasion</small>
-                                <strong>{{ style_plan.occasion }}</strong>
-                            </div>
-                        </div>
-
-                        {% if style_plan.wardrobe_items %}
-                            <div class="visual-section">
-                                <h3>Use from your wardrobe</h3>
-                                <div class="mini-card-row">
-                                    {% for item_name in style_plan.wardrobe_items %}
-                                        <div class="visual-mini-card">
-                                            <div class="visual-icon">🧺</div>
-                                            <span>{{ item_name }}</span>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% if style_plan.outfit_ideas %}
-                            <div class="visual-section">
-                                <h3>Outfit steps</h3>
-                                <div class="step-list">
-                                    {% for idea in style_plan.outfit_ideas %}
-                                        <div class="step-chip"><span>{{ forloop.counter }}</span>{{ idea }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% if style_plan.accessories %}
-                            <div class="visual-section">
-                                <h3>Accessories to try</h3>
-                                <div class="accessory-grid">
-                                    {% for accessory in style_plan.accessories %}
-                                        <div class="accessory-card">
-                                            <div class="visual-icon">💛</div>
-                                            <span>{{ accessory }}</span>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% if style_plan.missing_piece %}
-                            <div class="missing-piece-card">
-                                <span>🛍️</span>
-                                <div>
-                                    <small>Could improve this look</small>
-                                    <p>{{ style_plan.missing_piece }}</p>
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% if style_plan.quick_tip %}
-                            <div class="quick-tip-card">💡 {{ style_plan.quick_tip }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endif %}
         </div>
 
-        <form method="post" class="chat-input-bar">
+        <form method="post" class="stylist-question-form">
             {% csrf_token %}
-            <textarea id="stylistQuestion" name="question" rows="1" placeholder="Ask: What should I wear for brunch?" required>{{ user_question }}</textarea>
-            <button type="submit" aria-label="Ask stylist">➜</button>
+            <label for="stylistQuestion">Your question</label>
+            <textarea id="stylistQuestion" name="question" rows="4" placeholder="Example: Create a casual outfit using my saved clothes." required>{{ user_question }}</textarea>
+            <button type="submit" class="primary-button">Ask Stylist ✨</button>
         </form>
+
+        <div class="quick-question-row">
+            {% for question in suggested_questions %}
+                <button type="button" class="quick-question" data-question="{{ question }}">{{ question }}</button>
+            {% endfor %}
+        </div>
+
+        {% if assistant_reply %}
+            <div class="chat-answer-wrap visual-chat-wrap">
+                <div class="chat-bubble user-bubble">
+                    <strong>You</strong>
+                    <p>{{ user_question }}</p>
+                </div>
+                <div class="chat-bubble ai-bubble readable-ai-bubble">
+                    <strong>AI Stylist</strong>
+                    <p>{{ assistant_reply|linebreaksbr }}</p>
+                </div>
+
+                {% if visual_suggestion_items %}
+                    <section class="visual-suggestion-panel">
+                        <div class="section-title-row compact-title">
+                            <div>
+                                <h2>Suggested from your wardrobe</h2>
+                                <p>These images are from your saved closet.</p>
+                            </div>
+                        </div>
+                        <div class="visual-suggestion-grid">
+                            {% for item in visual_suggestion_items %}
+                                <a class="suggestion-mini-card" href="{% url 'clothing_item_detail' item.id %}">
+                                    <div class="suggestion-img-wrap">
+                                        {% if item.image %}
+                                            <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                                        {% else %}
+                                            <img src="{% static 'images/no-image.png' %}" alt="No image">
+                                        {% endif %}
+                                        <span>{{ item.category }}</span>
+                                    </div>
+                                    <strong>{{ item.name }}</strong>
+                                    <small>🎨 {{ item.color }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+                <section class="wishlist-preview-card glass-card">
+                    <div>
+                        <strong>Wishlist idea</strong>
+                        <p>If AI suggests something missing, save it later in Wishlist/Future Wardrobe phase.</p>
+                    </div>
+                    <span>🛍️</span>
+                </section>
+            </div>
+        {% endif %}
     </section>
 
-    <div class="quick-question-row chat-prompts">
-        {% for question in suggested_questions %}
-            <button type="button" class="quick-question" data-question="{{ question }}">{{ question }}</button>
-        {% endfor %}
-    </div>
-
-    <section class="section-title-row compact-title-row">
+    <section class="section-title-row">
         <div>
             <h2>Your style signals</h2>
-            <p>Used by the stylist to understand your closet.</p>
+            <p>These help the assistant understand your closet.</p>
         </div>
     </section>
 
@@ -184,12 +129,12 @@
         {% endfor %}
     </div>
 
-    <section class="section-title-row compact-title-row">
+    <section class="section-title-row">
         <div>
-            <h2>Wardrobe items</h2>
-            <p>Tap any item to view full details.</p>
+            <h2>Items the stylist can use</h2>
+            <p>Tap any item to view its full AI styling details.</p>
         </div>
-        <a href="{% url 'add_clothing_item' %}" class="desktop-add-btn">Add More</a>
+        <a href="{% url 'scan_wardrobe_ai' %}" class="desktop-add-btn">Scan Closet</a>
     </section>
 
     <section class="clothes-grid stylist-items">
@@ -212,8 +157,8 @@
             <div class="empty-state glass-card">
                 <img src="{% static 'images/no-image.png' %}" alt="No items">
                 <h3>No clothes yet</h3>
-                <p>Add a few clothes first so your stylist has something to work with.</p>
-                <a href="{% url 'add_clothing_item' %}" class="primary-link">Add clothes</a>
+                <p>Use AI wardrobe scanner to add many clothes quickly.</p>
+                <a href="{% url 'scan_wardrobe_ai' %}" class="primary-link">Scan wardrobe</a>
             </div>
         {% endfor %}
     </section>
@@ -233,12 +178,6 @@ document.querySelectorAll('.quick-question').forEach(button => {
         questionInput.focus();
     });
 });
-if (questionInput) {
-    questionInput.addEventListener('input', () => {
-        questionInput.style.height = 'auto';
-        questionInput.style.height = Math.min(questionInput.scrollHeight, 120) + 'px';
-    });
-}
 </script>
 </body>
 </html>

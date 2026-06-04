@@ -18,7 +18,8 @@
     <aside class="side-panel" id="sidePanel">
         <div class="side-panel-head"><strong>My Closet</strong><button type="button" id="closeCategories">×</button></div>
         <div class="profile-box"><span>{{ request.user.email|first|upper }}</span><div><strong>{{ request.user.email }}</strong><small>Signed in</small></div></div>
-        <a href="{% url 'add_clothing_item' %}" class="primary-link">+ Add clothing</a>
+        <a href="{% url 'scan_wardrobe_ai' %}" class="primary-link">📸 Scan wardrobe</a>
+        <a href="{% url 'add_clothing_item' %}" class="ghost-link">+ Add clothing</a>
         <a href="{% url 'stylist' %}" class="ghost-link">✨ AI Stylist</a>
         <a href="{% url 'logout' %}" class="ghost-link">Logout</a>
     </aside>
@@ -42,6 +43,17 @@
     <section class="quick-stats">
         <div class="stat-pill"><strong>{{ total_items }}</strong><span>Items</span></div>
         <div class="stat-pill"><strong>{{ total_categories }}</strong><span>Categories</span></div>
+    </section>
+
+    <section class="smart-action-row">
+        <a href="{% url 'scan_wardrobe_ai' %}" class="smart-action-card glass-card">
+            <span>📸</span>
+            <div><strong>Build My Wardrobe with AI</strong><small>Upload 1–5 closet photos and save many items together.</small></div>
+        </a>
+        <a href="{% url 'stylist' %}" class="smart-action-card glass-card">
+            <span>✨</span>
+            <div><strong>Ask AI Stylist</strong><small>Get visual outfit ideas from saved wardrobe images.</small></div>
+        </a>
     </section>
 
     <section class="search-card glass-card">
