@@ -17,6 +17,11 @@ urlpatterns = [
     path("item/<int:item_id>/edit/", views.edit_clothing_item_view, name="edit_clothing_item"),
     path("item/<int:item_id>/delete/", views.delete_clothing_item_view, name="delete_clothing_item"),
     path("stylist/", views.stylist_view, name="stylist"),
+    path("wishlist/", views.wishlist_view, name="wishlist"),
+    path("wishlist/add/", views.add_wishlist_item_view, name="add_wishlist_item"),
+    path("wishlist/save-ai-suggestion/", views.save_ai_suggestion_to_wishlist_view, name="save_ai_suggestion_to_wishlist"),
+    path("wishlist/<int:item_id>/toggle-purchased/", views.toggle_wishlist_purchased_view, name="toggle_wishlist_purchased"),
+    path("wishlist/<int:item_id>/delete/", views.delete_wishlist_item_view, name="delete_wishlist_item"),
     path("logout/", views.logout_view, name="logout"),
     path(
         "password-reset/",

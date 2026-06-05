@@ -21,6 +21,7 @@
         <a href="{% url 'scan_wardrobe_ai' %}" class="primary-link">📸 Scan wardrobe</a>
         <a href="{% url 'add_clothing_item' %}" class="ghost-link">+ Add clothing</a>
         <a href="{% url 'stylist' %}" class="ghost-link">✨ AI Stylist</a>
+        <a href="{% url 'wishlist' %}" class="ghost-link">🛍️ Wishlist</a>
         <a href="{% url 'logout' %}" class="ghost-link">Logout</a>
     </aside>
     <div class="panel-backdrop" id="panelBackdrop"></div>
@@ -40,9 +41,10 @@
         <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
     </section>
 
-    <section class="quick-stats">
+    <section class="quick-stats wardrobe-stats-three">
         <div class="stat-pill"><strong>{{ total_items }}</strong><span>Items</span></div>
         <div class="stat-pill"><strong>{{ total_categories }}</strong><span>Categories</span></div>
+        <a href="{% url 'wishlist' %}" class="stat-pill stat-link"><strong>{{ wishlist_count }}</strong><span>Wishlist</span></a>
     </section>
 
     <section class="smart-action-row">
@@ -54,6 +56,38 @@
             <span>✨</span>
             <div><strong>Ask AI Stylist</strong><small>Get visual outfit ideas from saved wardrobe images.</small></div>
         </a>
+        <a href="{% url 'wishlist' %}" class="smart-action-card glass-card">
+            <span>🛍️</span>
+            <div><strong>Future Wardrobe</strong><small>Save items you want to buy later.</small></div>
+        </a>
+    </section>
+
+    <section class="wishlist-preview-section glass-card">
+        <div class="section-title-row compact-title">
+            <div>
+                <h2>Future purchases</h2>
+                <p>Wishlist items and AI ideas saved for later.</p>
+            </div>
+            <a href="{% url 'wishlist' %}" class="tiny-link">View all</a>
+        </div>
+
+        <div class="wishlist-preview-row">
+            {% for item in wishlist_items %}
+                <a href="{% url 'wishlist' %}" class="wishlist-preview-chip">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.png' %}" alt="No image">
+                    {% endif %}
+                    <span>{{ item.title }}</span>
+                </a>
+            {% empty %}
+                <a href="{% url 'add_wishlist_item' %}" class="wishlist-empty-chip">
+                    <strong>🛍️ Start Wishlist</strong>
+                    <small>Save future purchase ideas here.</small>
+                </a>
+            {% endfor %}
+        </div>
     </section>
 
     <section class="search-card glass-card">
@@ -99,6 +133,7 @@
 <nav class="bottom-nav">
     <a href="{% url 'dashboard' %}" class="active">⌂<small>Home</small></a>
     <a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a>
+    <a href="{% url 'wishlist' %}">🛍️<small>Wishlist</small></a>
     <a href="{% url 'stylist' %}">✨<small>Stylist</small></a>
 </nav>
 

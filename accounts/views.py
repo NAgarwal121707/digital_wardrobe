@@ -12,8 +12,8 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 
-from wardrobe.forms import ClothingItemForm
-from wardrobe.models import ClothingItem
+from wardrobe.forms import ClothingItemForm, WishlistItemForm
+from wardrobe.models import ClothingItem, WishlistItem
 
 from .forms import LoginForm, RegisterForm
 
@@ -120,6 +120,7 @@ def register_view(request):
 @login_required(login_url="login")
 def dashboard_view(request):
     clothing_items = ClothingItem.objects.filter(user=request.user)
+    wishlist_items = WishlistItem.objects.filter(user=request.user, is_purchased=False)
     categories = (
         clothing_items.values("category")
         .annotate(item_count=Count("id"))
@@ -131,6 +132,8 @@ def dashboard_view(request):
         {
             "clothing_items": clothing_items,
             "categories": categories,
+            "wishlist_items": wishlist_items[:4],
+            "wishlist_count": wishlist_items.count(),
             "total_items": clothing_items.count(),
             "total_categories": categories.count(),
             "total_outfits": 0,
@@ -695,6 +698,97 @@ def stylist_view(request):
             "total_items": clothing_items.count(),
         },
     )
+
+
+
+@login_required(login_url="login")
+def wishlist_view(request):
+    wishlist_items = WishlistItem.objects.filter(user=request.user)
+    active_items = wishlist_items.filter(is_purchased=False)
+    purchased_items = wishlist_items.filter(is_purchased=True)
+
+    return render(
+        request,
+        "wishlist.html",
+        {
+            "wishlist_items": wishlist_items,
+            "active_items": active_items,
+            "purchased_items": purchased_items,
+            "active_count": active_items.count(),
+            "purchased_count": purchased_items.count(),
+        },
+    )
+
+
+@login_required(login_url="login")
+def add_wishlist_item_view(request):
+    if request.method == "POST":
+        form = WishlistItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            wishlist_item = form.save(commit=False)
+            wishlist_item.user = request.user
+            wishlist_item.save()
+            messages.success(request, "Wishlist item saved for future purchase.")
+            return redirect("wishlist")
+        messages.error(request, "Please correct the errors below.")
+    else:
+        initial = {
+            "source": request.GET.get("source", "future_purchase"),
+            "title": request.GET.get("title", ""),
+            "category": request.GET.get("category", ""),
+            "reason": request.GET.get("reason", ""),
+        }
+        form = WishlistItemForm(initial=initial)
+
+    return render(request, "add_wishlist_item.html", {"form": form})
+
+
+@login_required(login_url="login")
+def save_ai_suggestion_to_wishlist_view(request):
+    if request.method != "POST":
+        return redirect("stylist")
+
+    title = request.POST.get("title", "").strip() or "AI outfit suggestion"
+    reason = request.POST.get("reason", "").strip()
+
+    WishlistItem.objects.create(
+        user=request.user,
+        title=title[:140],
+        category="AI Suggestion",
+        reason=reason,
+        source="ai_suggestion",
+        priority="medium",
+    )
+
+    messages.success(request, "AI suggestion saved to your Wishlist.")
+    return redirect("wishlist")
+
+
+@login_required(login_url="login")
+def toggle_wishlist_purchased_view(request, item_id):
+    wishlist_item = get_object_or_404(WishlistItem, id=item_id, user=request.user)
+
+    if request.method == "POST":
+        wishlist_item.is_purchased = not wishlist_item.is_purchased
+        wishlist_item.save(update_fields=["is_purchased"])
+
+        if wishlist_item.is_purchased:
+            messages.success(request, "Marked as purchased.")
+        else:
+            messages.success(request, "Moved back to future purchases.")
+
+    return redirect("wishlist")
+
+
+@login_required(login_url="login")
+def delete_wishlist_item_view(request, item_id):
+    wishlist_item = get_object_or_404(WishlistItem, id=item_id, user=request.user)
+
+    if request.method == "POST":
+        wishlist_item.delete()
+        messages.success(request, "Wishlist item removed.")
+
+    return redirect("wishlist")
 
 
 @login_required(login_url="login")

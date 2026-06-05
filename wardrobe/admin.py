@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import ClothingItem
+from .models import ClothingItem, WishlistItem
 
 
 @admin.register(ClothingItem)
@@ -63,3 +63,37 @@ class ClothingItemAdmin(admin.ModelAdmin):
         return "No image"
 
     image_preview.short_description = "Preview"
+
+
+@admin.register(WishlistItem)
+class WishlistItemAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "user",
+        "category",
+        "source",
+        "priority",
+        "is_purchased",
+        "created_at",
+    )
+    list_filter = (
+        "source",
+        "priority",
+        "is_purchased",
+        "category",
+        "created_at",
+    )
+    search_fields = (
+        "title",
+        "category",
+        "color",
+        "reason",
+        "user__email",
+    )
+    autocomplete_fields = (
+        "user",
+    )
+    ordering = (
+        "is_purchased",
+        "-created_at",
+    )

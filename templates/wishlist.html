@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wishlist | Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="dashboard-page wishlist-page">
+<main class="app-shell">
+    <header class="app-header glass-card animate-drop">
+        <a href="{% url 'dashboard' %}" class="icon-button" aria-label="Back">‹</a>
+        <div class="brand-mini">
+            <span>WL</span>
+            <div>
+                <strong>Future Wardrobe</strong>
+                <small>{{ active_count }} item{{ active_count|pluralize }} planned</small>
+            </div>
+        </div>
+        <a href="{% url 'add_wishlist_item' %}" class="round-add" aria-label="Add wishlist item">＋</a>
+    </header>
+
+    {% if messages %}
+        <section class="messages-wrap">
+            {% for message in messages %}
+                <div class="app-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="wishlist-hero glass-card animate-rise">
+        <div>
+            <p class="eyebrow">Future purchases</p>
+            <h1>Save clothes you want later.</h1>
+            <p>Keep AI outfit ideas, trendy pieces, accessories, and future purchases in one beautiful section.</p>
+            <div class="wishlist-hero-actions">
+                <a href="{% url 'add_wishlist_item' %}" class="primary-link">+ Add Wishlist Item</a>
+                <a href="{% url 'stylist' %}" class="ghost-link">Ask AI Stylist</a>
+            </div>
+        </div>
+        <div class="wishlist-hero-icon happy-float">🛍️</div>
+    </section>
+
+    <section class="quick-stats">
+        <div class="stat-pill"><strong>{{ active_count }}</strong><span>Future items</span></div>
+        <div class="stat-pill"><strong>{{ purchased_count }}</strong><span>Purchased</span></div>
+    </section>
+
+    <section class="section-title-row">
+        <div>
+            <h2>Wishlist items</h2>
+            <p>Tap purchased when you buy something.</p>
+        </div>
+    </section>
+
+    <section class="wishlist-grid">
+        {% for item in active_items %}
+            <article class="wishlist-card glass-card animate-rise">
+                <div class="wishlist-img-wrap">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.png' %}" alt="No image">
+                    {% endif %}
+                    <span class="image-category-badge wishlist-source">{{ item.get_source_display }}</span>
+                </div>
+                <div class="wishlist-info">
+                    <h3>{{ item.title }}</h3>
+                    <div class="wishlist-tags">
+                        {% if item.category %}<span>{{ item.category }}</span>{% endif %}
+                        {% if item.color %}<span>🎨 {{ item.color }}</span>{% endif %}
+                        <span class="priority-{{ item.priority }}">{{ item.get_priority_display }}</span>
+                    </div>
+                    {% if item.reason %}
+                        <p>{{ item.reason|truncatechars:150 }}</p>
+                    {% endif %}
+                    {% if item.expected_budget %}
+                        <small>Budget: {{ item.expected_budget }}</small>
+                    {% endif %}
+                    {% if item.purchase_link %}
+                        <a href="{{ item.purchase_link }}" target="_blank" rel="noopener" class="tiny-link">Open purchase link →</a>
+                    {% endif %}
+                    <div class="wishlist-actions">
+                        <form method="post" action="{% url 'toggle_wishlist_purchased' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="primary-button small-action">Mark purchased</button>
+                        </form>
+                        <form method="post" action="{% url 'delete_wishlist_item' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="ghost-link small-action">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state glass-card">
+                <img src="{% static 'images/no-image.png' %}" alt="No wishlist items">
+                <h3>No future items yet</h3>
+                <p>Add items you want to purchase later, or save AI stylist suggestions from the chat.</p>
+                <a href="{% url 'add_wishlist_item' %}" class="primary-link">+ Add first wishlist item</a>
+            </div>
+        {% endfor %}
+    </section>
+
+    {% if purchased_items %}
+        <section class="section-title-row purchased-title">
+            <div>
+                <h2>Purchased</h2>
+                <p>Items you already bought.</p>
+            </div>
+        </section>
+        <section class="wishlist-grid purchased-grid">
+            {% for item in purchased_items %}
+                <article class="wishlist-card purchased-card glass-card">
+                    <div class="wishlist-img-wrap">
+                        {% if item.image %}
+                            <img src="{{ item.image.url }}" alt="{{ item.title }}">
+                        {% else %}
+                            <img src="{% static 'images/no-image.png' %}" alt="No image">
+                        {% endif %}
+                        <span class="image-category-badge">Purchased</span>
+                    </div>
+                    <div class="wishlist-info">
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.reason|default:"Bought from wishlist."|truncatechars:120 }}</p>
+                        <div class="wishlist-actions">
+                            <form method="post" action="{% url 'toggle_wishlist_purchased' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="ghost-link small-action">Move back</button>
+                            </form>
+                            <form method="post" action="{% url 'delete_wishlist_item' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="ghost-link small-action">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% endif %}
+</main>
+
+<nav class="bottom-nav">
+    <a href="{% url 'dashboard' %}">⌂<small>Home</small></a>
+    <a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a>
+    <a href="{% url 'wishlist' %}" class="active">🛍️<small>Wishlist</small></a>
+    <a href="{% url 'stylist' %}">✨<small>Stylist</small></a>
+</nav>
+</body>
+</html>

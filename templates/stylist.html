@@ -18,7 +18,7 @@
                 <small>{{ total_items }} wardrobe item{{ total_items|pluralize }}</small>
             </div>
         </div>
-        <a href="{% url 'scan_wardrobe_ai' %}" class="round-add" aria-label="Scan wardrobe">📸</a>
+        <a href="{% url 'wishlist' %}" class="round-add" aria-label="Wishlist">🛍️</a>
     </header>
 
     {% if messages %}
@@ -95,12 +95,17 @@
                     </section>
                 {% endif %}
 
-                <section class="wishlist-preview-card glass-card">
+                <section class="wishlist-preview-card glass-card real-wishlist-save-card">
                     <div>
-                        <strong>Wishlist idea</strong>
-                        <p>If AI suggests something missing, save it later in Wishlist/Future Wardrobe phase.</p>
+                        <strong>Save this AI idea?</strong>
+                        <p>Add this suggestion to your Future Wardrobe so you can purchase missing pieces later.</p>
                     </div>
-                    <span>🛍️</span>
+                    <form method="post" action="{% url 'save_ai_suggestion_to_wishlist' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="title" value="AI outfit idea">
+                        <input type="hidden" name="reason" value="{{ assistant_reply|striptags }}">
+                        <button type="submit" class="primary-button small-action">Save to Wishlist</button>
+                    </form>
                 </section>
             </div>
         {% endif %}
@@ -167,6 +172,7 @@
 <nav class="bottom-nav">
     <a href="{% url 'dashboard' %}">⌂<small>Home</small></a>
     <a href="{% url 'add_clothing_item' %}">＋<small>Add</small></a>
+    <a href="{% url 'wishlist' %}">🛍️<small>Wishlist</small></a>
     <a href="{% url 'stylist' %}" class="active">✨<small>Stylist</small></a>
 </nav>
 

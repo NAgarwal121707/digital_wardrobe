@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Wishlist Item | Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="dashboard-page form-page wishlist-form-page">
+<main class="app-shell">
+    <header class="app-header glass-card animate-drop">
+        <a href="{% url 'wishlist' %}" class="icon-button" aria-label="Back">‹</a>
+        <div class="brand-mini">
+            <span>🛍️</span>
+            <div>
+                <strong>Add Wishlist Item</strong>
+                <small>Future wardrobe planner</small>
+            </div>
+        </div>
+        <a href="{% url 'dashboard' %}" class="round-add" aria-label="Home">⌂</a>
+    </header>
+
+    {% if messages %}
+        <section class="messages-wrap">
+            {% for message in messages %}
+                <div class="app-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="wishlist-hero glass-card animate-rise">
+        <div>
+            <p class="eyebrow">Plan future looks</p>
+            <h1>Save what you want to buy later.</h1>
+            <p>Add an item manually, or save AI suggestions from the stylist chat.</p>
+        </div>
+        <div class="wishlist-hero-icon happy-float">✨</div>
+    </section>
+
+    <section class="form-card glass-card">
+        <form method="post" enctype="multipart/form-data" class="wardrobe-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="form-errors">
+                    Please check the highlighted fields.
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Item name</label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+
+            <div class="form-two-col">
+                <div class="form-group">
+                    <label for="{{ form.category.id_for_label }}">Category</label>
+                    {{ form.category }}
+                    {{ form.category.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.color.id_for_label }}">Color</label>
+                    {{ form.color }}
+                    {{ form.color.errors }}
+                </div>
+            </div>
+
+            <div class="form-two-col">
+                <div class="form-group">
+                    <label for="{{ form.source.id_for_label }}">Source</label>
+                    {{ form.source }}
+                    {{ form.source.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.priority.id_for_label }}">Priority</label>
+                    {{ form.priority }}
+                    {{ form.priority.errors }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.image.id_for_label }}">Image / inspiration photo</label>
+                {{ form.image }}
+                {{ form.image.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.reason.id_for_label }}">Why save this?</label>
+                {{ form.reason }}
+                {{ form.reason.errors }}
+            </div>
+
+            <div class="form-two-col">
+                <div class="form-group">
+                    <label for="{{ form.expected_budget.id_for_label }}">Budget</label>
+                    {{ form.expected_budget }}
+                    {{ form.expected_budget.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.purchase_link.id_for_label }}">Purchase link</label>
+                    {{ form.purchase_link }}
+                    {{ form.purchase_link.errors }}
+                </div>
+            </div>
+
+            <button type="submit" class="primary-button full-width">Save to Wishlist</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>

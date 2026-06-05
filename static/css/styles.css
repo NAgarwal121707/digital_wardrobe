@@ -10,3 +10,191 @@
 
 /* Phase 3A - AI Wardrobe Scanner + Visual Chat Cards */
 .smart-action-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 18px}.smart-action-card{display:flex;align-items:center;gap:14px;padding:16px;border-radius:24px;transition:transform .18s ease,box-shadow .18s ease}.smart-action-card:hover{transform:translateY(-3px)}.smart-action-card>span{display:grid;width:52px;height:52px;place-items:center;border-radius:18px;background:var(--yellow);font-size:1.35rem}.smart-action-card strong,.smart-action-card small{display:block}.smart-action-card strong{font-weight:500}.smart-action-card small{margin-top:3px;color:var(--muted);line-height:1.35}.choice-grid-three{grid-template-columns:repeat(3,minmax(0,1fr))}.ai-scan-page .form-hero h1{max-width:760px}.scan-upload-card{margin-bottom:18px}.scan-photo-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px}.scan-photo-card{overflow:hidden;border-radius:20px}.scan-photo-card img{width:100%;height:140px;object-fit:cover}.detected-items-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:86px}.detected-item-card{padding:14px;border-radius:28px}.save-check{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-weight:500}.save-check input{width:20px;height:20px;accent-color:#ffd338}.detected-source-img{width:100%;height:220px;object-fit:cover;border-radius:22px;background:#fff4e5;margin-bottom:12px}.detected-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.detected-fields label{display:grid;gap:6px;color:var(--muted);font-size:.82rem;font-weight:500}.detected-fields input,.detected-fields textarea{width:100%;min-height:42px;padding:9px 11px;border:1px solid var(--line);border-radius:13px;background:#fff;color:var(--ink);outline:0;font-weight:400}.detected-fields textarea{grid-column:1/-1;min-height:72px;resize:vertical;line-height:1.4}.sticky-save-bar{position:fixed;left:50%;bottom:18px;z-index:70;transform:translateX(-50%);width:min(680px,calc(100% - 28px));display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:22px}.sticky-save-bar span{font-weight:500}.readable-ai-bubble{background:#fff!important;color:#333;border-color:#e6e1d6}.visual-chat-wrap{gap:14px}.visual-suggestion-panel{padding:14px;border-radius:24px;background:#f7f7f4;border:1px solid #e8e3d8}.compact-title{margin:0 0 10px}.compact-title h2{font-size:1.2rem}.visual-suggestion-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.suggestion-mini-card{display:grid;gap:7px;padding:8px;border-radius:18px;background:#fff;border:1px solid var(--line);transition:transform .16s ease}.suggestion-mini-card:hover{transform:translateY(-2px)}.suggestion-img-wrap{position:relative;overflow:hidden;border-radius:15px;background:#fff4e5}.suggestion-img-wrap img{width:100%;height:145px;object-fit:cover}.suggestion-img-wrap span{position:absolute;right:7px;top:7px;max-width:calc(100% - 14px);padding:5px 8px;border-radius:999px;background:rgba(255,211,56,.95);font-size:.66rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.suggestion-mini-card strong{font-weight:500;font-size:.92rem;line-height:1.2}.suggestion-mini-card small{color:var(--muted);font-weight:500}.wishlist-preview-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border-radius:22px;background:#333;color:#fff}.wishlist-preview-card strong{font-weight:500}.wishlist-preview-card p{margin:4px 0 0;color:rgba(255,255,255,.78);line-height:1.35}.wishlist-preview-card span{font-size:1.6rem}@media(max-width:900px){.choice-grid-three{grid-template-columns:1fr}.scan-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.detected-items-grid{grid-template-columns:1fr}.visual-suggestion-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.smart-action-row{grid-template-columns:1fr}.scan-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.detected-fields{grid-template-columns:1fr}.detected-source-img{height:190px}.sticky-save-bar{bottom:82px}.visual-suggestion-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.suggestion-img-wrap img{height:130px}}
+
+
+/* =========================
+   Wishlist / Future Wardrobe
+   ========================= */
+.wardrobe-stats-three{grid-template-columns:repeat(3,1fr)}
+.stat-link{color:var(--ink);text-decoration:none}
+.wishlist-hero{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:22px;
+    align-items:center;
+    margin-bottom:16px;
+    padding:28px;
+    border-radius:34px;
+}
+.wishlist-hero h1{
+    margin:0 0 8px;
+    font-size:clamp(2rem,5vw,3.6rem);
+    line-height:1;
+    letter-spacing:-.06em;
+    font-weight:500;
+}
+.wishlist-hero p{margin:0;color:var(--muted);line-height:1.55}
+.wishlist-hero-icon{
+    display:grid;
+    width:112px;
+    height:112px;
+    place-items:center;
+    border-radius:32px;
+    background:#fff;
+    border:1px solid var(--line);
+    font-size:3rem;
+    box-shadow:0 16px 40px rgba(23,23,23,.10);
+}
+.wishlist-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.wishlist-preview-section{
+    padding:18px;
+    border-radius:28px;
+    margin:0 0 18px;
+}
+.wishlist-preview-row{
+    display:flex;
+    gap:12px;
+    overflow-x:auto;
+    padding:2px 2px 8px;
+}
+.wishlist-preview-row::-webkit-scrollbar{height:0}
+.wishlist-preview-chip{
+    flex:0 0 158px;
+    display:grid;
+    gap:8px;
+    padding:10px;
+    border-radius:22px;
+    background:#fff;
+    border:1px solid var(--line);
+    box-shadow:0 10px 26px rgba(40,35,31,.07);
+}
+.wishlist-preview-chip img{
+    width:100%;
+    height:104px;
+    object-fit:cover;
+    border-radius:16px;
+    background:#f5f5f5;
+}
+.wishlist-preview-chip span{
+    color:var(--ink);
+    font-size:.9rem;
+    line-height:1.25;
+}
+.wishlist-empty-chip{
+    display:grid;
+    min-height:118px;
+    width:100%;
+    place-items:center;
+    text-align:center;
+    border-radius:24px;
+    background:#fff;
+    border:1px dashed rgba(23,23,23,.22);
+    color:var(--ink);
+}
+.wishlist-empty-chip small{color:var(--muted);font-weight:400}
+.wishlist-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+}
+.wishlist-card{
+    overflow:hidden;
+    border-radius:28px;
+}
+.wishlist-img-wrap{
+    position:relative;
+    height:220px;
+    background:#f4f4f4;
+}
+.wishlist-img-wrap img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+.wishlist-source{background:var(--accent);color:#fff}
+.wishlist-info{
+    display:grid;
+    gap:10px;
+    padding:16px;
+}
+.wishlist-info h3{
+    margin:0;
+    font-size:1.08rem;
+    letter-spacing:-.03em;
+    font-weight:500;
+}
+.wishlist-info p{
+    margin:0;
+    color:#333;
+    line-height:1.45;
+    font-size:.94rem;
+}
+.wishlist-info small{color:var(--muted)}
+.wishlist-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+}
+.wishlist-tags span{
+    display:inline-flex;
+    align-items:center;
+    min-height:30px;
+    padding:0 10px;
+    border-radius:999px;
+    background:var(--accent-soft);
+    color:#245f59;
+    font-size:.78rem;
+    font-weight:500;
+}
+.wishlist-tags .priority-high{background:#ffe8d6;color:#9a3d00}
+.wishlist-tags .priority-medium{background:var(--yellow-soft);color:#5b4700}
+.wishlist-tags .priority-low{background:#edf2f7;color:#475569}
+.wishlist-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:4px;
+}
+.small-action{
+    min-height:38px;
+    padding:0 12px;
+    border-radius:12px;
+    font-size:.86rem;
+    border:0;
+}
+.purchased-title{margin-top:26px}
+.purchased-card{opacity:.78}
+.purchased-card .wishlist-img-wrap img{filter:grayscale(.25)}
+.real-wishlist-save-card{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:16px;
+    border-radius:22px;
+    background:#fff;
+}
+.real-wishlist-save-card p{
+    margin:4px 0 0;
+    color:var(--muted);
+    line-height:1.4;
+}
+.full-width{width:100%}
+
+@media (max-width: 820px){
+    .wardrobe-stats-three{grid-template-columns:repeat(3,1fr)}
+    .wishlist-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+    .wishlist-img-wrap{height:170px}
+    .wishlist-hero{grid-template-columns:1fr;padding:22px}
+    .wishlist-hero-icon{width:82px;height:82px;font-size:2.2rem}
+}
+
+@media (max-width: 520px){
+    .wishlist-grid{grid-template-columns:1fr}
+    .wishlist-img-wrap{height:240px}
+    .wardrobe-stats-three .stat-pill{min-height:62px}
+    .wardrobe-stats-three .stat-pill strong{font-size:1.25rem}
+    .wardrobe-stats-three .stat-pill span{font-size:.78rem}
+    .real-wishlist-save-card{display:grid}
+    .real-wishlist-save-card .primary-button{width:100%}
+}
