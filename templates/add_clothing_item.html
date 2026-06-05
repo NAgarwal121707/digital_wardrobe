@@ -23,27 +23,35 @@
         <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
     </section>
 
-    <section class="choice-grid choice-grid-three">
-        <a href="{% url 'scan_wardrobe_ai' %}" class="choice-card glass-card recommended-card">
+    <section class="choice-grid choice-grid-four">
+        <a href="{% url 'quick_add_gallery' %}" class="choice-card glass-card recommended-card">
+            <span class="choice-icon">🃏</span>
+            <small class="choice-badge">Most fun</small>
+            <h2>Quick Add From Gallery</h2>
+            <p>Select many photos from your phone. AI fills details, then swipe right to save or left to skip.</p>
+            <strong>Open swipe builder →</strong>
+        </a>
+
+        <a href="{% url 'scan_wardrobe_ai' %}" class="choice-card glass-card">
             <span class="choice-icon">📸</span>
-            <small class="choice-badge">Fastest</small>
-            <h2>Build My Wardrobe with AI</h2>
-            <p>Upload 1–5 wardrobe photos. AI detects multiple visible clothes and prepares entries for you to review.</p>
+            <small class="choice-badge">Closet scan</small>
+            <h2>Scan Wardrobe Sections</h2>
+            <p>Upload 1–5 clear wardrobe section photos. Best for hanging clothes or shelves with visible items.</p>
             <strong>Scan wardrobe →</strong>
         </a>
 
         <a href="{% url 'add_clothing_item_ai' %}" class="choice-card glass-card">
             <span class="choice-icon">✨</span>
-            <small class="choice-badge">Recommended</small>
+            <small class="choice-badge">Single item</small>
             <h2>Use Wardrobe AI Agent</h2>
-            <p>Upload one clothing image. AI reads garment type, color, vibe, occasion, and fills the details. You can edit before saving.</p>
+            <p>Upload one clothing image. AI reads garment type, color, vibe, occasion, and fills the details.</p>
             <strong>Start with AI →</strong>
         </a>
 
         <a href="{% url 'add_clothing_item_manual' %}" class="choice-card glass-card">
             <span class="choice-icon">✍️</span>
             <h2>Add Manually</h2>
-            <p>Add image, name, category, and color yourself using quick chips. Best when you already know exact details.</p>
+            <p>Add image, name, category, and color yourself using quick chips.</p>
             <strong>Manual add →</strong>
         </a>
     </section>

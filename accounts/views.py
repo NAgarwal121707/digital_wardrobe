@@ -92,6 +92,45 @@ Rules:
 """.strip()
 
 
+AI_GALLERY_QUICK_ADD_PROMPT = """
+You are a fashion-aware AI wardrobe assistant.
+The user selected multiple photos from their phone gallery. Each photo may or may not be a wardrobe item.
+Analyze each uploaded image independently and return ONLY valid JSON.
+
+Return format:
+{
+  "items": [
+    {
+      "source_image_index": 0,
+      "is_clothing_image": true,
+      "confidence": 0,
+      "rejection_reason": "",
+      "name": "short item name",
+      "category": "simple custom category",
+      "color": "main visible color",
+      "tags": ["tag 1", "tag 2"],
+      "garment_type": "specific garment type",
+      "aesthetic": "fashion vibe",
+      "fit_silhouette": "short fit/silhouette if visible",
+      "occasion": "best occasion",
+      "season": "best season",
+      "accessories": ["accessory idea 1", "accessory idea 2"],
+      "is_complete_outfit": false,
+      "styling_notes": "one short practical styling line"
+    }
+  ]
+}
+
+Rules:
+- Return exactly one item object per uploaded image.
+- If an image is not clothing, footwear, bag, jewelry, accessory, or outfit, set is_clothing_image=false.
+- Do not guess from unclear/blurred/non-fashion images.
+- If image contains a full outfit or two main garments together, set category as Complete Outfit or Two-piece Outfit and mention pieces in tags.
+- Keep output short because user will swipe right to save or left to skip.
+- confidence must be 0-100.
+""".strip()
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
@@ -496,6 +535,184 @@ def add_clothing_item_ai_view(request):
         )
 
     return render(request, "add_clothing_item_ai.html", context)
+
+
+def _analyze_gallery_quick_add_images(image_payloads):
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        return {"error": "OPENAI_API_KEY is missing. Add it in Render Environment Variables to enable AI Quick Add."}
+
+    try:
+        from openai import OpenAI
+    except ImportError:
+        return {"error": "The openai package is missing. Add openai to requirements.txt and redeploy."}
+
+    content = [{"type": "text", "text": AI_GALLERY_QUICK_ADD_PROMPT}]
+    for payload in image_payloads:
+        encoded_image = base64.b64encode(payload["bytes"]).decode("utf-8")
+        image_data_url = f"data:{payload['content_type']};base64,{encoded_image}"
+        content.append({"type": "image_url", "image_url": {"url": image_data_url, "detail": "high"}})
+
+    try:
+        client = OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=os.environ.get("OPENAI_VISION_MODEL", "gpt-4o-mini"),
+            messages=[{"role": "user", "content": content}],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+            max_tokens=2600,
+        )
+        data = json.loads(response.choices[0].message.content or "{}")
+    except Exception as exc:
+        return {"error": f"AI gallery analysis failed: {exc}"}
+
+    raw_items = data.get("items") if isinstance(data.get("items"), list) else []
+    normalized = []
+    for pos, item in enumerate(raw_items[:len(image_payloads)]):
+        if not isinstance(item, dict):
+            item = {}
+        try:
+            source_index = int(item.get("source_image_index", pos))
+        except (TypeError, ValueError):
+            source_index = pos
+        source_index = max(0, min(source_index, len(image_payloads) - 1))
+        tags = item.get("tags", [])
+        accessories = item.get("accessories", [])
+        normalized.append(
+            {
+                "source_image_index": source_index,
+                "is_clothing_image": bool(item.get("is_clothing_image", True)),
+                "confidence": item.get("confidence", 0),
+                "rejection_reason": str(item.get("rejection_reason") or "").strip(),
+                "name": str(item.get("name") or "").strip(),
+                "category": str(item.get("category") or "Uncategorized").strip(),
+                "color": str(item.get("color") or "Not specified").strip(),
+                "tags": ", ".join(tags) if isinstance(tags, list) else str(tags or ""),
+                "garment_type": str(item.get("garment_type") or "").strip(),
+                "aesthetic": str(item.get("aesthetic") or "").strip(),
+                "fit_silhouette": str(item.get("fit_silhouette") or "").strip(),
+                "occasion": str(item.get("occasion") or "").strip(),
+                "season": str(item.get("season") or "").strip(),
+                "accessories": ", ".join(accessories) if isinstance(accessories, list) else str(accessories or ""),
+                "is_complete_outfit": bool(item.get("is_complete_outfit")),
+                "styling_notes": str(item.get("styling_notes") or "").strip(),
+            }
+        )
+
+    # Guarantee one review card per uploaded image even if AI returns fewer entries.
+    existing_indexes = {item["source_image_index"] for item in normalized}
+    for idx in range(len(image_payloads)):
+        if idx not in existing_indexes:
+            normalized.append(
+                {
+                    "source_image_index": idx,
+                    "is_clothing_image": False,
+                    "confidence": 0,
+                    "rejection_reason": "AI could not confidently identify a clothing item in this photo.",
+                    "name": "",
+                    "category": "Uncategorized",
+                    "color": "Not specified",
+                    "tags": "",
+                    "garment_type": "",
+                    "aesthetic": "",
+                    "fit_silhouette": "",
+                    "occasion": "",
+                    "season": "",
+                    "accessories": "",
+                    "is_complete_outfit": False,
+                    "styling_notes": "",
+                }
+            )
+
+    normalized.sort(key=lambda item: item["source_image_index"])
+    return {"items": normalized}
+
+
+@login_required(login_url="login")
+def quick_add_gallery_view(request):
+    context = {"gallery_items": []}
+
+    if request.method == "POST" and request.POST.get("action") == "save_swiped_items":
+        selected_indexes = request.POST.getlist("selected_items")
+        saved_count = 0
+        for index in selected_indexes:
+            prefix = f"item_{index}_"
+            name = request.POST.get(prefix + "name", "").strip()
+            if len(name) < 2:
+                continue
+            ClothingItem.objects.create(
+                user=request.user,
+                name=name,
+                category=request.POST.get(prefix + "category", "").strip() or "Uncategorized",
+                color=request.POST.get(prefix + "color", "").strip() or "Not specified",
+                image=request.POST.get(prefix + "image_path", "").strip() or None,
+                tags=request.POST.get(prefix + "tags", "").strip(),
+                garment_type=request.POST.get(prefix + "garment_type", "").strip(),
+                aesthetic=request.POST.get(prefix + "aesthetic", "").strip(),
+                fit_silhouette=request.POST.get(prefix + "fit_silhouette", "").strip(),
+                occasion=request.POST.get(prefix + "occasion", "").strip(),
+                season=request.POST.get(prefix + "season", "").strip(),
+                accessories=request.POST.get(prefix + "accessories", "").strip(),
+                styling_notes=request.POST.get(prefix + "styling_notes", "").strip(),
+                is_complete_outfit=request.POST.get(prefix + "is_complete_outfit") == "true",
+            )
+            saved_count += 1
+
+        if saved_count:
+            messages.success(request, f"Saved {saved_count} gallery item{'s' if saved_count != 1 else ''} to your wardrobe.")
+            return redirect("dashboard")
+        messages.error(request, "Swipe right or select at least one clothing item before saving.")
+        return render(request, "quick_add_gallery.html", context)
+
+    if request.method == "POST":
+        uploaded_images = request.FILES.getlist("images")
+        if not uploaded_images:
+            messages.error(request, "Please choose photos from your gallery first.")
+            return render(request, "quick_add_gallery.html", context)
+        if len(uploaded_images) > 20:
+            messages.error(request, "Please choose maximum 20 photos at once for smooth AI review.")
+            return render(request, "quick_add_gallery.html", context)
+
+        allowed_types = ["image/jpeg", "image/png", "image/webp"]
+        image_payloads = []
+        saved_paths = []
+        image_urls = []
+
+        for uploaded_image in uploaded_images:
+            if getattr(uploaded_image, "content_type", "") not in allowed_types:
+                messages.error(request, "Only JPG, PNG, or WEBP images are allowed.")
+                return render(request, "quick_add_gallery.html", context)
+            if uploaded_image.size > 7 * 1024 * 1024:
+                messages.error(request, "Each image must be less than 7 MB.")
+                return render(request, "quick_add_gallery.html", context)
+
+            image_bytes = uploaded_image.read()
+            ext = os.path.splitext(uploaded_image.name)[1] or ".jpg"
+            safe_path = f"gallery_quick_add/{request.user.id}/{uuid.uuid4().hex}{ext}"
+            saved_path = default_storage.save(safe_path, ContentFile(image_bytes))
+            saved_paths.append(saved_path)
+            image_urls.append(default_storage.url(saved_path))
+            image_payloads.append({"bytes": image_bytes, "content_type": uploaded_image.content_type})
+
+        result = _analyze_gallery_quick_add_images(image_payloads)
+        if result.get("error"):
+            messages.error(request, result["error"])
+            return render(request, "quick_add_gallery.html", context)
+
+        gallery_items = []
+        for idx, item in enumerate(result.get("items", [])):
+            source_index = item.get("source_image_index", idx)
+            source_index = max(0, min(source_index, len(saved_paths) - 1))
+            item["image_path"] = saved_paths[source_index]
+            item["image_url"] = image_urls[source_index]
+            item["review_index"] = idx
+            gallery_items.append(item)
+
+        clothing_count = sum(1 for item in gallery_items if item.get("is_clothing_image"))
+        messages.success(request, f"AI reviewed {len(gallery_items)} photos. Swipe right to save clothes, left to skip. {clothing_count} look like fashion items.")
+        context["gallery_items"] = gallery_items
+
+    return render(request, "quick_add_gallery.html", context)
 
 
 @login_required(login_url="login")

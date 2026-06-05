@@ -12,6 +12,7 @@ urlpatterns = [
     path("add-item/manual/", views.add_clothing_item_manual_view, name="add_clothing_item_manual"),
     path("add-item/ai/", views.add_clothing_item_ai_view, name="add_clothing_item_ai"),
     path("scan-wardrobe-ai/", views.scan_wardrobe_ai_view, name="scan_wardrobe_ai"),
+    path("quick-add-gallery/", views.quick_add_gallery_view, name="quick_add_gallery"),
     path("add-item/ai-assist/", views.add_clothing_item_ai_view, name="ai_add_clothing_item"),
     path("item/<int:item_id>/", views.clothing_item_detail_view, name="clothing_item_detail"),
     path("item/<int:item_id>/edit/", views.edit_clothing_item_view, name="edit_clothing_item"),

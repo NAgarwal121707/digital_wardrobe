@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quick Add From Gallery | Digital Wardrobe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body class="form-page swipe-builder-page">
+<main class="form-shell">
+    <header class="form-topbar">
+        <a href="{% url 'add_clothing_item' %}" class="brand-mini">
+            <span>DW</span>
+            <div><strong>Quick Add</strong><small>Swipe gallery photos</small></div>
+        </a>
+        <a href="{% url 'dashboard' %}" class="ghost-link">Back</a>
+    </header>
+
+    {% if messages %}
+        <section class="messages-wrap">
+            {% for message in messages %}
+                <div class="app-message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="form-hero glass-card happy-float swipe-hero">
+        <div>
+            <p class="eyebrow">Phase 2C</p>
+            <h1>Build wardrobe from gallery.</h1>
+            <p>Select many outfit or clothing photos. AI fills the details, then you swipe right to save and left to skip.</p>
+            <div class="mini-tip-row">
+                <span>➡️ Swipe right = save</span>
+                <span>⬅️ Swipe left = skip</span>
+                <span>✏️ Edit before saving</span>
+            </div>
+        </div>
+        <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
+    </section>
+
+    {% if not gallery_items %}
+        <section class="glass-card upload-gallery-card">
+            <h2>Choose gallery photos</h2>
+            <p>Best for existing outfit selfies, single item photos, shopping screenshots, or clothes already saved in your phone gallery.</p>
+            <form method="POST" enctype="multipart/form-data" class="gallery-upload-form">
+                {% csrf_token %}
+                <label class="big-file-drop">
+                    <span>🖼️</span>
+                    <strong>Open Gallery</strong>
+                    <small>Select up to 20 photos. AI will ignore non-clothing photos.</small>
+                    <input type="file" name="images" accept="image/*" multiple required>
+                </label>
+                <button type="submit" class="primary-button full-width">Analyze Gallery Photos</button>
+            </form>
+        </section>
+
+        <section class="glass-card scan-guidance-card">
+            <h2>Why this is better than whole wardrobe scan</h2>
+            <div class="guidance-grid">
+                <div><strong>More accurate</strong><small>Each photo is judged separately instead of guessing folded piles.</small></div>
+                <div><strong>More fun</strong><small>Swipe like a review deck. No boring long form.</small></div>
+                <div><strong>User control</strong><small>AI fills details, but user decides what enters wardrobe.</small></div>
+            </div>
+        </section>
+    {% else %}
+        <form method="POST" class="swipe-save-form" id="swipeSaveForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_swiped_items">
+
+            <section class="swipe-stage glass-card">
+                <div class="swipe-progress">
+                    <span id="swipeCounter">1 / {{ gallery_items|length }}</span>
+                    <strong id="swipeSavedCount">0 selected</strong>
+                </div>
+
+                <div class="swipe-deck" id="swipeDeck">
+                    {% for item in gallery_items %}
+                        <article class="swipe-card {% if not item.is_clothing_image %}not-fashion{% endif %}" data-card-index="{{ forloop.counter0 }}" data-review-index="{{ item.review_index }}">
+                            <div class="swipe-img-wrap">
+                                <img src="{{ item.image_url }}" alt="Gallery photo {{ forloop.counter }}">
+                                {% if item.is_clothing_image %}
+                                    <span class="confidence-badge {% if item.confidence|default:0 < 60 %}low{% endif %}">{{ item.confidence|default:0 }}% sure</span>
+                                {% else %}
+                                    <span class="confidence-badge low">Skip suggested</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="swipe-content">
+                                {% if item.is_clothing_image %}
+                                    <h2>{{ item.name|default:'Clothing item' }}</h2>
+                                    <p>{{ item.category }} • {{ item.color }}</p>
+                                {% else %}
+                                    <h2>Not sure this is clothing</h2>
+                                    <p>{{ item.rejection_reason|default:'Swipe left to skip, or edit details and save if this is actually a wardrobe item.' }}</p>
+                                {% endif %}
+
+                                <div class="swipe-chip-row">
+                                    {% if item.season %}<span>{{ item.season }}</span>{% endif %}
+                                    {% if item.occasion %}<span>{{ item.occasion }}</span>{% endif %}
+                                    {% if item.aesthetic %}<span>{{ item.aesthetic }}</span>{% endif %}
+                                </div>
+
+                                <details class="edit-before-save">
+                                    <summary>Edit AI details before saving</summary>
+                                    <div class="swipe-fields">
+                                        <label>Name<input type="text" name="item_{{ item.review_index }}_name" value="{{ item.name }}"></label>
+                                        <label>Category<input type="text" name="item_{{ item.review_index }}_category" value="{{ item.category }}"></label>
+                                        <label>Color<input type="text" name="item_{{ item.review_index }}_color" value="{{ item.color }}"></label>
+                                        <label>Season<input type="text" name="item_{{ item.review_index }}_season" value="{{ item.season }}"></label>
+                                        <label>Occasion<input type="text" name="item_{{ item.review_index }}_occasion" value="{{ item.occasion }}"></label>
+                                        <label>Tags<input type="text" name="item_{{ item.review_index }}_tags" value="{{ item.tags }}"></label>
+                                        <label>Garment type<input type="text" name="item_{{ item.review_index }}_garment_type" value="{{ item.garment_type }}"></label>
+                                        <label>Aesthetic<input type="text" name="item_{{ item.review_index }}_aesthetic" value="{{ item.aesthetic }}"></label>
+                                        <label>Fit<input type="text" name="item_{{ item.review_index }}_fit_silhouette" value="{{ item.fit_silhouette }}"></label>
+                                        <label>Accessories<input type="text" name="item_{{ item.review_index }}_accessories" value="{{ item.accessories }}"></label>
+                                        <label class="wide-field">Styling notes<textarea name="item_{{ item.review_index }}_styling_notes">{{ item.styling_notes }}</textarea></label>
+                                    </div>
+                                </details>
+
+                                <input type="hidden" name="item_{{ item.review_index }}_image_path" value="{{ item.image_path }}">
+                                <input type="hidden" name="item_{{ item.review_index }}_is_complete_outfit" value="{% if item.is_complete_outfit %}true{% else %}false{% endif %}">
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                <div class="swipe-actions">
+                    <button type="button" class="swipe-btn skip" id="skipBtn">← Skip</button>
+                    <button type="button" class="swipe-btn save" id="saveBtn">Save →</button>
+                </div>
+            </section>
+
+            <div id="selectedInputs"></div>
+
+            <section class="sticky-save-bar glass-card">
+                <span id="finalSelectedText">0 items selected</span>
+                <button type="submit" class="primary-button">Save Selected</button>
+            </section>
+        </form>
+    {% endif %}
+</main>
+
+<nav class="bottom-nav">
+    <a href="{% url 'dashboard' %}">⌂<small>Home</small></a>
+    <a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a>
+</nav>
+
+<script>
+const cards = Array.from(document.querySelectorAll('.swipe-card'));
+const skipBtn = document.getElementById('skipBtn');
+const saveBtn = document.getElementById('saveBtn');
+const counter = document.getElementById('swipeCounter');
+const savedCount = document.getElementById('swipeSavedCount');
+const finalText = document.getElementById('finalSelectedText');
+const selectedInputs = document.getElementById('selectedInputs');
+let current = 0;
+let selected = new Set();
+let startX = 0;
+let currentX = 0;
+
+function updateUI(){
+    cards.forEach((card, index) => {
+        card.classList.toggle('active', index === current);
+        card.classList.toggle('gone', index < current);
+    });
+    if(counter){ counter.textContent = cards.length ? `${Math.min(current + 1, cards.length)} / ${cards.length}` : 'Done'; }
+    if(savedCount){ savedCount.textContent = `${selected.size} selected`; }
+    if(finalText){ finalText.textContent = `${selected.size} item${selected.size === 1 ? '' : 's'} selected`; }
+    if(skipBtn){ skipBtn.disabled = current >= cards.length; }
+    if(saveBtn){ saveBtn.disabled = current >= cards.length; }
+    if(current >= cards.length){
+        const deck = document.getElementById('swipeDeck');
+        if(deck && !deck.querySelector('.swipe-done')){
+            const done = document.createElement('div');
+            done.className = 'swipe-done';
+            done.innerHTML = `<h2>Review finished 🎉</h2><p>${selected.size} item${selected.size === 1 ? '' : 's'} selected. Tap Save Selected below.</p>`;
+            deck.appendChild(done);
+        }
+    }
+}
+
+function rebuildSelectedInputs(){
+    if(!selectedInputs) return;
+    selectedInputs.innerHTML = '';
+    selected.forEach(index => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selected_items';
+        input.value = index;
+        selectedInputs.appendChild(input);
+    });
+}
+
+function nextCard(save){
+    if(current >= cards.length) return;
+    const card = cards[current];
+    const reviewIndex = card.dataset.reviewIndex;
+    if(save){
+        selected.add(reviewIndex);
+        card.classList.add('swiped-right');
+    } else {
+        selected.delete(reviewIndex);
+        card.classList.add('swiped-left');
+    }
+    current += 1;
+    rebuildSelectedInputs();
+    setTimeout(updateUI, 120);
+}
+
+skipBtn && skipBtn.addEventListener('click', () => nextCard(false));
+saveBtn && saveBtn.addEventListener('click', () => nextCard(true));
+
+cards.forEach(card => {
+    card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; currentX = startX; }, {passive:true});
+    card.addEventListener('touchmove', e => {
+        currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        if(card.classList.contains('active')){
+            card.style.transform = `translateX(${diff}px) rotate(${diff/18}deg)`;
+        }
+    }, {passive:true});
+    card.addEventListener('touchend', () => {
+        const diff = currentX - startX;
+        card.style.transform = '';
+        if(Math.abs(diff) > 90){ nextCard(diff > 0); }
+    });
+});
+
+updateUI();
+</script>
+</body>
+</html>
