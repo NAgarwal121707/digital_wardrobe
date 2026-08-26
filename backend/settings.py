@@ -50,11 +50,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
+    "corsheaders",
     "rest_framework",
+
     "accounts",
     "wardrobe",
-    'cloudinary',
-    'cloudinary_storage',
+
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -62,6 +66,9 @@ AUTH_USER_MODEL = "accounts.User"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+
+    "corsheaders.middleware.CorsMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -203,3 +210,16 @@ CLOUDINARY_STORAGE = {
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
+
+
+# =========================
+# CORS for Flutter Web development
+# =========================
+# Flutter Web runs from a random localhost port. These regexes allow only
+# localhost/127.0.0.1 development origins instead of opening CORS globally.
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://localhost:\d+$",
+    r"^http://127\.0\.0\.1:\d+$",
+]
+
+CORS_URLS_REGEX = r"^/api/.*$"

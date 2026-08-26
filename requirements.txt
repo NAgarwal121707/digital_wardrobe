@@ -16,3 +16,5 @@ whitenoise==6.12.0
 cloudinary
 django-cloudinary-storage
 openai
+
+django-cors-headers
