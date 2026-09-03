@@ -8,6 +8,9 @@ from .api_views import (
     LoginAPIView,
     RegisterAPIView,
     WishlistListAPIView,
+    WishlistDetailAPIView,
+    AIAnalyzeAPIView,
+    AIStylistAPIView,
 )
 
 urlpatterns = [
@@ -18,4 +21,7 @@ urlpatterns = [
     path("wardrobe/", ClothingListAPIView.as_view(), name="api_wardrobe"),
     path("wardrobe/<int:item_id>/", ClothingDetailAPIView.as_view(), name="api_wardrobe_detail"),
     path("wishlist/", WishlistListAPIView.as_view(), name="api_wishlist"),
+    path("wishlist/<int:item_id>/", WishlistDetailAPIView.as_view(), name="api_wishlist_detail"),
+    path("ai/analyze/", AIAnalyzeAPIView.as_view(), name="api_ai_analyze"),
+    path("ai/stylist/", AIStylistAPIView.as_view(), name="api_ai_stylist"),
 ]
