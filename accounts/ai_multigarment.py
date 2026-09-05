@@ -314,6 +314,28 @@ def _piece_from_payload(data: dict[str, Any], index: int) -> dict[str, Any]:
     return normalized
 
 
+def _normalise_ai_storage_path(path: str) -> str:
+    """Normalize storage names returned by different Django storage backends.
+
+    CloudinaryStorage can return names such as ``media/ai_sources/...`` while
+    FileSystemStorage typically returns ``ai_sources/...``.  Validation should
+    compare the logical storage path, not the backend-specific ``media/``
+    prefix.
+    """
+    value = str(path or "").strip().replace("\\", "/").lstrip("/")
+    if value.startswith("media/"):
+        value = value[len("media/"):]
+    return value
+
+
+def _is_user_ai_storage_path(path: str, user_id: int) -> bool:
+    value = _normalise_ai_storage_path(path)
+    return (
+        value.startswith(f"ai_sources/{user_id}/")
+        or value.startswith(f"ai_piece_crops/{user_id}/")
+    )
+
+
 def save_multigarment_selection(
     *,
     user,
@@ -341,7 +363,7 @@ def save_multigarment_selection(
     if allowed_image_paths is not None:
         if source_image_path and source_image_path not in allowed_image_paths:
             raise ValueError("Invalid AI source image. Please analyse the photo again.")
-    elif source_image_path and not source_image_path.startswith(expected_source_prefix):
+    elif source_image_path and not _is_user_ai_storage_path(source_image_path, user.id):
         raise ValueError("Invalid AI source image. Please analyse the photo again.")
 
     outfit = _normalise_outfit(outfit_payload or {}, selected or pieces)
@@ -363,10 +385,7 @@ def save_multigarment_selection(
             if allowed_image_paths is not None:
                 if image_path and image_path not in allowed_image_paths:
                     image_path = source_image_path
-            elif image_path and not (
-                image_path.startswith(f"ai_piece_crops/{user.id}/")
-                or image_path.startswith(expected_source_prefix)
-            ):
+            elif image_path and not _is_user_ai_storage_path(image_path, user.id):
                 image_path = source_image_path
             created.append(ClothingItem.objects.create(
                 user=user,
