@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import ClothingItem, WishlistItem
+from .models import ClothingItem, OutfitGroup, WishlistItem
 
 
 @admin.register(ClothingItem)
@@ -97,3 +97,12 @@ class WishlistItemAdmin(admin.ModelAdmin):
         "is_purchased",
         "-created_at",
     )
+
+
+@admin.register(OutfitGroup)
+class OutfitGroupAdmin(admin.ModelAdmin):
+    list_display = ("name", "user", "source_type", "created_at")
+    list_filter = ("source_type", "created_at")
+    search_fields = ("name", "user__email")
+    autocomplete_fields = ("user",)
+    ordering = ("-created_at",)

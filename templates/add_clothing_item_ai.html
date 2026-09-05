@@ -3,92 +3,162 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Wardrobe AI Agent | Digital Wardrobe</title>
+    <title>AI Add | Digital Wardrobe</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body class="form-page ai-page">
 <main class="form-shell">
-    <header class="form-topbar"><a href="{% url 'add_clothing_item' %}" class="brand-mini"><span>AI</span><div><strong>Wardrobe AI Agent</strong><small>Review before saving</small></div></a><a href="{% url 'add_clothing_item' %}" class="ghost-link">Back</a></header>
-    {% if messages %}<section class="messages-wrap">{% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}</section>{% endif %}
+    <header class="form-topbar">
+        <a href="{% url 'add_clothing_item' %}" class="brand-mini">
+            <span>AI</span>
+            <div><strong>AI Add</strong><small>One photo can contain many garments</small></div>
+        </a>
+        <a href="{% url 'add_clothing_item' %}" class="ghost-link">Back</a>
+    </header>
+
+    {% if messages %}
+        <section class="messages-wrap">
+            {% for message in messages %}<div class="app-message {{ message.tags }}">{{ message }}</div>{% endfor %}
+        </section>
+    {% endif %}
 
     <section class="form-hero glass-card ai-hero">
         <div>
-            <p class="eyebrow">Vision AI Stylist</p>
-            <h1>Upload photo. AI fills the form.</h1>
-            <p>The AI will visually detect item name, category, color, style vibe, occasion, season, and styling notes. You can change anything before saving.</p>
+            <p class="eyebrow">Vision AI wardrobe builder</p>
+            <h1>A photo is not always one item.</h1>
+            <p>If you upload a burgundy top with black jeans, AI separates both pieces so your stylist can reuse each one later. The original combination is still remembered as one look.</p>
         </div>
-        {% if image_url %}<img src="{{ image_url }}" alt="AI uploaded clothing" class="hero-img item-preview-img">{% else %}<img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">{% endif %}
+        {% if image_url %}
+            <img src="{{ image_url }}" alt="Original uploaded look" class="hero-img item-preview-img">
+        {% else %}
+            <img src="{% static 'images/wardrobe-hero.png' %}" alt="Wardrobe inspiration" class="hero-img">
+        {% endif %}
     </section>
 
-    {% if not analysis or analysis.error %}
+    {% if not analysis %}
         <section class="form-card glass-card">
-            <h2>Step 1: Upload clothing image</h2>
+            <h2>Choose a fashion photo</h2>
+            <p class="form-intro">Single item, complete outfit, top + jeans, kurta + pants, blazer + shirt + trousers — all are supported.</p>
             <form method="post" enctype="multipart/form-data" class="smart-form">
                 {% csrf_token %}
                 <div class="form-field">
-                    <label for="id_ai_image">Clothing Photo</label>
-                    <input id="id_ai_image" class="form-control file-input" type="file" name="image" accept="image/*" capture="environment" required>
-                    <small class="field-help">Use a clear front photo for best AI results. JPG, PNG, WEBP under 5 MB.</small>
+                    <label for="id_ai_image">Photo</label>
+                    <input id="id_ai_image" class="form-control file-input" type="file" name="image" accept="image/jpeg,image/png,image/webp" capture="environment" required>
+                    <small class="field-help">JPG, PNG or WEBP. Maximum 8 MB. Clear lighting gives better garment separation.</small>
                 </div>
-                <button type="submit" class="primary-button">Analyze with AI ✨</button>
+                <button type="submit" class="primary-button">Analyze photo with AI ✨</button>
             </form>
         </section>
     {% endif %}
 
-    {% if analysis and not analysis.error %}
-        <section class="ai-review-grid">
-            <article class="ai-preview-card glass-card">
-                <img src="{{ image_url }}" alt="AI uploaded clothing">
-                <div>
-                    <p class="eyebrow">AI Found</p>
-                    <h2>{{ analysis.garment_type|default:"Clothing Item" }}</h2>
-                    <div class="tag-cloud">
-                        {% for tag in analysis.tags %}<span>{{ tag }}</span>{% endfor %}
-                        {% if analysis.aesthetic %}<span>{{ analysis.aesthetic }}</span>{% endif %}
-                        {% if analysis.occasion %}<span>{{ analysis.occasion }}</span>{% endif %}
-                    </div>
-                    {% if analysis.styling_notes %}<p class="styling-note">{{ analysis.styling_notes }}</p>{% endif %}
-                </div>
-            </article>
-
-            <section class="form-card glass-card">
-                <h2>Step 2: Review & Save</h2>
-                <p class="form-intro">AI filled these fields. If anything feels wrong, edit it manually before saving.</p>
-                <form method="post" class="smart-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="save_ai_item">
-                    <input type="hidden" name="ai_image_path" value="{{ image_path }}">
-                    <input type="hidden" name="garment_type" value="{{ analysis.garment_type }}">
-                    <input type="hidden" name="aesthetic" value="{{ analysis.aesthetic }}">
-                    <input type="hidden" name="occasion" value="{{ analysis.occasion }}">
-                    <input type="hidden" name="season" value="{{ analysis.season }}">
-                    <input type="hidden" name="styling_notes" value="{{ analysis.styling_notes }}">
-                    <input type="hidden" name="fit_silhouette" value="{{ analysis.fit_silhouette }}">
-                    <input type="hidden" name="is_complete_outfit" value="{% if analysis.is_complete_outfit %}true{% else %}false{% endif %}">
-                    <input type="hidden" name="tags" value="{% for tag in analysis.tags %}{{ tag }}{% if not forloop.last %}, {% endif %}{% endfor %}">
-                    <input type="hidden" name="accessories" value="{% for accessory in analysis.accessories %}{{ accessory }}{% if not forloop.last %}, {% endif %}{% endfor %}">
-
-                    <div class="form-field"><label for="id_name">Item Name</label><input id="id_name" name="name" class="form-control" value="{{ analysis.name }}" required></div>
-                    <div class="form-field"><label for="id_category">Category</label><input id="id_category" name="category" class="form-control" value="{{ analysis.category }}"></div>
-                    <div class="form-field"><label for="id_color">Color</label><input id="id_color" name="color" class="form-control" value="{{ analysis.color }}"></div>
-
-                    <div class="ai-insight-box">
-                        <strong>Extra AI insight</strong>
-                        <p><b>Fit:</b> {{ analysis.fit_silhouette|default:"Not detected" }}</p>
-                        <p><b>Season:</b> {{ analysis.season|default:"Flexible" }}</p>
-                        <p><b>Complete outfit?</b> {% if analysis.is_complete_outfit %}Yes — focus on accessories and footwear.{% else %}No — pair it with matching wardrobe items.{% endif %}</p>
-                    </div>
-
-                    <div class="button-row">
-                        <button type="submit" class="primary-button">Save AI-Filled Item</button>
-                        <a href="{% url 'add_clothing_item_ai' %}" class="ghost-link">Try another image</a>
-                    </div>
-                </form>
-            </section>
+    {% if analysis %}
+        <section class="multi-detect-summary glass-card">
+            <div>
+                <p class="eyebrow">AI result</p>
+                <h2>{{ analysis.pieces|length }} reusable piece{{ analysis.pieces|length|pluralize }} detected</h2>
+                {% if analysis.pieces|length > 1 %}
+                    <p>Recommended: save pieces separately. The original look will remain linked, so AI can remember what was worn together.</p>
+                {% else %}
+                    <p>Review the detected item before saving. You can edit any AI field.</p>
+                {% endif %}
+            </div>
+            <div class="detect-confidence">{{ analysis.confidence }}%<small>confidence</small></div>
         </section>
+
+        <form method="post" class="multi-review-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_ai_items">
+            <input type="hidden" name="source_image_path" value="{{ analysis.source_image_path }}">
+            <input type="hidden" name="piece_count" value="{{ analysis.pieces|length }}">
+            <textarea hidden name="outfit_json">{{ analysis.outfit_json }}</textarea>
+
+            <section class="save-mode-card glass-card">
+                <div>
+                    <h2>How should this photo be saved?</h2>
+                    <p>For a top + jeans photo, separate pieces is usually best because both garments become reusable in future outfit suggestions.</p>
+                </div>
+                <div class="save-mode-options">
+                    <label class="save-mode-option recommended">
+                        <input type="radio" name="save_mode" value="separate" checked>
+                        <span><strong>Separate pieces</strong><small>Recommended — save every selected garment independently and remember the original look.</small></span>
+                    </label>
+                    <label class="save-mode-option">
+                        <input type="radio" name="save_mode" value="outfit">
+                        <span><strong>Complete outfit only</strong><small>Save one full-look card using the original photo.</small></span>
+                    </label>
+                    <label class="save-mode-option">
+                        <input type="radio" name="save_mode" value="both">
+                        <span><strong>Pieces + complete outfit</strong><small>Keep reusable pieces and an extra whole-look card.</small></span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="detected-piece-grid">
+                {% for piece in analysis.pieces %}
+                    <article class="detected-piece-card glass-card">
+                        <div class="piece-image-wrap">
+                            {% if piece.image_url %}
+                                <img src="{{ piece.image_url }}" alt="{{ piece.name }}">
+                            {% else %}
+                                <img src="{{ analysis.source_image_url }}" alt="{{ piece.name }}">
+                            {% endif %}
+                            <span class="image-category-badge">{{ piece.category }}</span>
+                        </div>
+
+                        <label class="save-check piece-save-check">
+                            <input type="checkbox" name="piece_{{ forloop.counter0 }}_selected" checked>
+                            <span>Save this piece</span>
+                        </label>
+
+                        <input type="hidden" name="piece_{{ forloop.counter0 }}_image_path" value="{{ piece.image_path }}">
+                        <input type="hidden" name="piece_{{ forloop.counter0 }}_is_complete_outfit" value="{% if piece.is_complete_outfit %}true{% else %}false{% endif %}">
+
+                        <div class="detected-fields two-col-fields">
+                            <label>Name<input name="piece_{{ forloop.counter0 }}_name" value="{{ piece.name }}" required></label>
+                            <label>Category<input name="piece_{{ forloop.counter0 }}_category" value="{{ piece.category }}"></label>
+                            <label>Color<input name="piece_{{ forloop.counter0 }}_color" value="{{ piece.color }}"></label>
+                            <label>Garment type<input name="piece_{{ forloop.counter0 }}_garment_type" value="{{ piece.garment_type }}"></label>
+                            <label>Aesthetic<input name="piece_{{ forloop.counter0 }}_aesthetic" value="{{ piece.aesthetic }}"></label>
+                            <label>Fit / silhouette<input name="piece_{{ forloop.counter0 }}_fit_silhouette" value="{{ piece.fit_silhouette }}"></label>
+                            <label>Occasion<input name="piece_{{ forloop.counter0 }}_occasion" value="{{ piece.occasion }}"></label>
+                            <label>Season<input name="piece_{{ forloop.counter0 }}_season" value="{{ piece.season }}"></label>
+                            <label class="wide-field">Tags<input name="piece_{{ forloop.counter0 }}_tags" value="{% for tag in piece.tags %}{{ tag }}{% if not forloop.last %}, {% endif %}{% endfor %}"></label>
+                            <label class="wide-field">Accessories<input name="piece_{{ forloop.counter0 }}_accessories" value="{% for accessory in piece.accessories %}{{ accessory }}{% if not forloop.last %}, {% endif %}{% endfor %}"></label>
+                            <label class="wide-field">Styling notes<textarea name="piece_{{ forloop.counter0 }}_styling_notes" rows="3">{{ piece.styling_notes }}</textarea></label>
+                        </div>
+                    </article>
+                {% endfor %}
+            </section>
+
+            <section class="original-look-card glass-card">
+                <div class="original-look-image">
+                    <img src="{{ analysis.source_image_url }}" alt="Original look">
+                </div>
+                <div>
+                    <p class="eyebrow">Original look memory</p>
+                    <h2>Keep the relationship between these pieces</h2>
+                    <p>The app will remember that these garments appeared together even when you save them separately.</p>
+                    <div class="detected-fields two-col-fields">
+                        <label>Look name<input name="outfit_name" value="{{ analysis.outfit.name }}"></label>
+                        <label class="wide-field">Whole-look styling note<textarea name="outfit_styling_notes" rows="3">{{ analysis.outfit.styling_notes }}</textarea></label>
+                    </div>
+                </div>
+            </section>
+
+            <div class="sticky-save-bar glass-card">
+                <span>Reviewed the AI details?</span>
+                <button type="submit" class="primary-button">Save to my wardrobe</button>
+            </div>
+        </form>
     {% endif %}
 </main>
-<nav class="bottom-nav"><a href="{% url 'dashboard' %}">⌂<small>Home</small></a><a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a></nav>
+
+<nav class="bottom-nav">
+    <a href="{% url 'dashboard' %}">⌂<small>Home</small></a>
+    <a href="{% url 'add_clothing_item' %}" class="active">＋<small>Add</small></a>
+    <a href="{% url 'wishlist' %}">🛍️<small>Wishlist</small></a>
+    <a href="{% url 'stylist' %}">✨<small>Stylist</small></a>
+</nav>
 </body>
 </html>

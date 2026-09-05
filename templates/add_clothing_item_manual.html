@@ -30,6 +30,18 @@
             <div class="form-field"><label for="id_color">Color</label>{{ form.color }}{{ form.color.errors }}
                 <div class="chip-row" data-fill="id_color"><button type="button">Black</button><button type="button">White</button><button type="button">Blue</button><button type="button">Red</button><button type="button">Pink</button><button type="button">Green</button><button type="button">Brown</button><button type="button">Multicolor</button></div>
             </div>
+            <details class="advanced-details" open>
+                <summary>Styling & AI details</summary>
+                <div class="form-field"><label for="id_tags">Tags</label>{{ form.tags }}{{ form.tags.errors }}</div>
+                <div class="form-field"><label for="id_garment_type">Garment Type</label>{{ form.garment_type }}{{ form.garment_type.errors }}</div>
+                <div class="form-field"><label for="id_aesthetic">Aesthetic</label>{{ form.aesthetic }}{{ form.aesthetic.errors }}</div>
+                <div class="form-field"><label for="id_fit_silhouette">Fit / Silhouette</label>{{ form.fit_silhouette }}{{ form.fit_silhouette.errors }}</div>
+                <div class="form-field"><label for="id_occasion">Occasion</label>{{ form.occasion }}{{ form.occasion.errors }}</div>
+                <div class="form-field"><label for="id_season">Season</label>{{ form.season }}{{ form.season.errors }}</div>
+                <div class="form-field"><label for="id_accessories">Accessory Ideas</label>{{ form.accessories }}{{ form.accessories.errors }}</div>
+                <div class="form-field"><label for="id_styling_notes">Styling Notes</label>{{ form.styling_notes }}{{ form.styling_notes.errors }}</div>
+                <label class="check-row" for="id_is_complete_outfit">{{ form.is_complete_outfit }} <span>Treat this as a complete outfit / one-piece look</span></label>
+            </details>
             <button type="submit" class="primary-button">Save Clothing Item</button>
         </form>
     </section>

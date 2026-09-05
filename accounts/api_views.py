@@ -13,7 +13,8 @@ import os, uuid
 from io import BytesIO
 from PIL import Image, UnidentifiedImageError
 from .views import _analyze_clothing_image, _generate_stylist_reply, _visual_items_for_reply
-from wardrobe.models import ClothingItem, WishlistItem
+from wardrobe.models import ClothingItem, OutfitGroup, WishlistItem
+from .ai_multigarment import analyse_and_store, save_multigarment_selection
 
 
 User = get_user_model()
@@ -126,6 +127,13 @@ def _clothing_json(request, item):
         "accessories": item.accessories,
         "styling_notes": item.styling_notes,
         "is_complete_outfit": item.is_complete_outfit,
+        "outfit_group_id": item.outfit_group_id,
+        "outfit_group_name": item.outfit_group.name if item.outfit_group_id else "",
+        "original_look_url": _image_url(request, item.outfit_group.original_image) if item.outfit_group_id else None,
+        "paired_with": [
+            {"id": other.id, "name": other.name, "category": other.category, "image_url": _image_url(request, other.image)}
+            for other in (item.outfit_group.pieces.exclude(id=item.id)[:6] if item.outfit_group_id else [])
+        ],
         "created_at": item.created_at.isoformat(),
     }
 
@@ -164,7 +172,7 @@ class DashboardAPIView(APIView):
                 "total_items": items.count(),
                 "total_categories": len(categories),
                 "wishlist_count": wishlist.count(),
-                "total_outfits": items.filter(is_complete_outfit=True).count(),
+                "total_outfits": OutfitGroup.objects.filter(user=request.user).count(),
             },
             "categories": categories,
             "recent_items": [_clothing_json(request, x) for x in items[:8]],
@@ -279,60 +287,68 @@ class AIAnalyzeAPIView(APIView):
         image = request.FILES.get("image")
         if not image:
             return Response({"detail": "Please choose an image."}, status=400)
+        if image.size > 8 * 1024 * 1024:
+            return Response({"detail": "Image must be under 8 MB."}, status=400)
 
-        if image.size > 5 * 1024 * 1024:
-            return Response({"detail": "Image must be under 5 MB."}, status=400)
-
-        # Flutter Web multipart uploads can arrive as application/octet-stream
-        # even when the selected file is a valid JPG/PNG/WEBP. Validate the
-        # actual image bytes instead of trusting the browser MIME header.
         raw = image.read()
-        try:
-            with Image.open(BytesIO(raw)) as detected_image:
-                detected_format = (detected_image.format or "").upper()
-        except (UnidentifiedImageError, OSError, ValueError):
-            return Response(
-                {"detail": "The selected file is not a valid image."},
-                status=400,
-            )
-
-        mime_by_format = {
-            "JPEG": "image/jpeg",
-            "PNG": "image/png",
-            "WEBP": "image/webp",
-        }
-        extension_by_format = {
-            "JPEG": ".jpg",
-            "PNG": ".png",
-            "WEBP": ".webp",
-        }
-
-        content_type = mime_by_format.get(detected_format)
-        if content_type is None:
-            return Response(
-                {"detail": "Only JPG, PNG or WEBP images are allowed."},
-                status=400,
-            )
-
-        result = _analyze_clothing_image(raw, content_type)
+        result = analyse_and_store(raw, request.user.id)
         if result.get("error"):
-            return Response(result, status=503)
+            return Response(result, status=503 if "AI" in result.get("error", "") else 400)
         if not result.get("is_clothing_image", True):
             return Response(result, status=422)
 
-        ext = extension_by_format[detected_format]
-        path = default_storage.save(
-            f"ai_clothing_uploads/{request.user.id}/{uuid.uuid4().hex}{ext}",
-            ContentFile(raw),
-        )
-        result["image_path"] = path
-        saved_url = default_storage.url(path)
-        result["image_url"] = (
-            request.build_absolute_uri(saved_url)
-            if saved_url.startswith("/")
-            else saved_url
-        )
+        # Convert storage-relative URLs to absolute URLs for Flutter web/mobile.
+        for key in ("source_image_url",):
+            url = result.get(key)
+            if url and str(url).startswith("/"):
+                result[key] = request.build_absolute_uri(url)
+        for piece in result.get("pieces", []):
+            url = piece.get("image_url")
+            if url and str(url).startswith("/"):
+                piece["image_url"] = request.build_absolute_uri(url)
         return Response(result)
+
+
+class AISaveAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        source_image_path = str(request.data.get("source_image_path") or "").strip()
+        pieces = request.data.get("pieces") or []
+        outfit = request.data.get("outfit") or {}
+        save_mode = str(request.data.get("save_mode") or "separate").strip()
+        source_type = str(request.data.get("source_type") or "ai_add").strip()
+        if not isinstance(pieces, list):
+            return Response({"detail": "Invalid detected pieces."}, status=400)
+        try:
+            group, created = save_multigarment_selection(
+                user=request.user,
+                source_image_path=source_image_path,
+                pieces_payload=pieces,
+                outfit_payload=outfit if isinstance(outfit, dict) else {},
+                save_mode=save_mode,
+                source_type=source_type if source_type in {"ai_add", "gallery", "wardrobe_scan"} else "ai_add",
+            )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=400)
+        return Response({
+            "message": f"Saved {len(created)} wardrobe item{'s' if len(created) != 1 else ''}.",
+            "outfit_group_id": group.id if group else None,
+            "items": [_clothing_json(request, item) for item in created],
+        }, status=201)
+
+
+class ProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({
+            "id": request.user.id,
+            "email": request.user.email,
+            "wardrobe_count": ClothingItem.objects.filter(user=request.user).count(),
+            "outfit_count": OutfitGroup.objects.filter(user=request.user).count(),
+            "wishlist_count": WishlistItem.objects.filter(user=request.user, is_purchased=False).count(),
+        })
 
 
 class AIStylistAPIView(APIView):

@@ -1,45 +1,44 @@
-# Miscellaneous
-*.class
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+venv/
+.venv/
+env/
+
+# Django runtime data
+db.sqlite3
+media/
+staticfiles/
 *.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+# IDE / OS
 .idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# If a Flutter project is accidentally extracted inside this backend repo,
+# keep it out of Git. The real Flutter app belongs in its own repository/folder.
 .dart_tool/
 .flutter-plugins-dependencies
-.pub-cache/
-.pub/
+.metadata
 /build/
-/coverage/
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+/android/
+/ios/
+/linux/
+/macos/
+/windows/
+/web/
+/test/
+/lib/
+pubspec.yaml
+pubspec.lock
+analysis_options.yaml

@@ -2,6 +2,32 @@ from django.conf import settings
 from django.db import models
 
 
+class OutfitGroup(models.Model):
+    SOURCE_CHOICES = [
+        ("ai_add", "AI Add"),
+        ("gallery", "Gallery Builder"),
+        ("wardrobe_scan", "Wardrobe Scan"),
+        ("manual", "Manual"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="outfit_groups",
+    )
+    name = models.CharField(max_length=140, blank=True, default="Original look")
+    source_type = models.CharField(max_length=30, choices=SOURCE_CHOICES, default="ai_add")
+    original_image = models.ImageField(upload_to="outfit_sources/", blank=True, null=True)
+    notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name or f"Outfit {self.pk}"
+
+
 class ClothingItem(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -28,6 +54,15 @@ class ClothingItem(models.Model):
     accessories = models.TextField(blank=True, default="")
     styling_notes = models.TextField(blank=True, default="")
     is_complete_outfit = models.BooleanField(default=False)
+
+    outfit_group = models.ForeignKey(
+        OutfitGroup,
+        on_delete=models.SET_NULL,
+        related_name="pieces",
+        blank=True,
+        null=True,
+    )
+    source_item_index = models.PositiveSmallIntegerField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

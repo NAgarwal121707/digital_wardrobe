@@ -1,4 +1,6 @@
 from django import forms
+from io import BytesIO
+from PIL import Image, UnidentifiedImageError
 
 from .models import ClothingItem, WishlistItem
 
@@ -6,42 +8,54 @@ from .models import ClothingItem, WishlistItem
 class ClothingItemForm(forms.ModelForm):
     class Meta:
         model = ClothingItem
-        fields = ["name", "category", "color", "image"]
+        fields = [
+            "name",
+            "category",
+            "color",
+            "image",
+            "tags",
+            "garment_type",
+            "aesthetic",
+            "fit_silhouette",
+            "occasion",
+            "season",
+            "accessories",
+            "styling_notes",
+            "is_complete_outfit",
+        ]
         widgets = {
-            "name": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Example: Blue denim jacket",
-                    "autocomplete": "off",
-                }
-            ),
-            "category": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Choose chip or type custom category",
-                    "autocomplete": "off",
-                }
-            ),
-            "color": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "Choose chip or type color",
-                    "autocomplete": "off",
-                }
-            ),
-            "image": forms.FileInput(
-                attrs={
-                    "class": "form-control file-input",
-                    "accept": "image/*",
-                }
-            ),
+            "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Example: Burgundy fitted top", "autocomplete": "off"}),
+            "category": forms.TextInput(attrs={"class": "form-control", "placeholder": "Tops, Jeans, Dresses, Shoes...", "autocomplete": "off"}),
+            "color": forms.TextInput(attrs={"class": "form-control", "placeholder": "Burgundy, Black, Beige...", "autocomplete": "off"}),
+            "image": forms.FileInput(attrs={"class": "form-control file-input", "accept": "image/jpeg,image/png,image/webp"}),
+            "tags": forms.TextInput(attrs={"class": "form-control", "placeholder": "casual, fitted, ribbed, evening"}),
+            "garment_type": forms.TextInput(attrs={"class": "form-control", "placeholder": "Top, Straight jeans, Blazer..."}),
+            "aesthetic": forms.TextInput(attrs={"class": "form-control", "placeholder": "Minimal, Smart casual, Classic..."}),
+            "fit_silhouette": forms.TextInput(attrs={"class": "form-control", "placeholder": "Fitted, Relaxed, Straight..."}),
+            "occasion": forms.TextInput(attrs={"class": "form-control", "placeholder": "Casual, Office, Party..."}),
+            "season": forms.TextInput(attrs={"class": "form-control", "placeholder": "Summer, Winter, All season..."}),
+            "accessories": forms.TextInput(attrs={"class": "form-control", "placeholder": "Hoops, black bag, sneakers..."}),
+            "styling_notes": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Specific styling notes for this item"}),
+            "is_complete_outfit": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["category"].required = False
-        self.fields["color"].required = False
-        self.fields["image"].required = False
+        for field in [
+            "category",
+            "color",
+            "image",
+            "tags",
+            "garment_type",
+            "aesthetic",
+            "fit_silhouette",
+            "occasion",
+            "season",
+            "accessories",
+            "styling_notes",
+            "is_complete_outfit",
+        ]:
+            self.fields[field].required = False
 
     def clean_name(self):
         name = self.cleaned_data.get("name", "").strip()
@@ -61,14 +75,22 @@ class ClothingItemForm(forms.ModelForm):
         image = self.cleaned_data.get("image")
         if not image:
             return image
-        if not hasattr(image, "content_type"):
-            return image
-        allowed_content_types = ["image/jpeg", "image/png", "image/webp"]
-        if image.content_type not in allowed_content_types:
+        if image.size > 8 * 1024 * 1024:
+            raise forms.ValidationError("Image size must be less than 8 MB.")
+        try:
+            raw = image.read()
+            with Image.open(BytesIO(raw)) as parsed:
+                fmt = (parsed.format or "").upper()
+                parsed.verify()
+        except (UnidentifiedImageError, OSError, ValueError):
+            raise forms.ValidationError("The selected file is not a valid image.")
+        finally:
+            try:
+                image.seek(0)
+            except Exception:
+                pass
+        if fmt not in {"JPEG", "PNG", "WEBP"}:
             raise forms.ValidationError("Only JPG, PNG, or WEBP images are allowed.")
-        max_size = 5 * 1024 * 1024
-        if image.size > max_size:
-            raise forms.ValidationError("Image size must be less than 5 MB.")
         return image
 
 
@@ -154,9 +176,20 @@ class WishlistItemForm(forms.ModelForm):
         image = self.cleaned_data.get("image")
         if not image:
             return image
-        allowed_content_types = ["image/jpeg", "image/png", "image/webp"]
-        if hasattr(image, "content_type") and image.content_type not in allowed_content_types:
+        if image.size > 8 * 1024 * 1024:
+            raise forms.ValidationError("Image size must be less than 8 MB.")
+        try:
+            raw = image.read()
+            with Image.open(BytesIO(raw)) as parsed:
+                fmt = (parsed.format or "").upper()
+                parsed.verify()
+        except (UnidentifiedImageError, OSError, ValueError):
+            raise forms.ValidationError("The selected file is not a valid image.")
+        finally:
+            try:
+                image.seek(0)
+            except Exception:
+                pass
+        if fmt not in {"JPEG", "PNG", "WEBP"}:
             raise forms.ValidationError("Only JPG, PNG, or WEBP images are allowed.")
-        if image.size > 5 * 1024 * 1024:
-            raise forms.ValidationError("Image size must be less than 5 MB.")
         return image
