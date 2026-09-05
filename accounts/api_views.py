@@ -12,7 +12,7 @@ from django.core.files.storage import default_storage
 import os, uuid
 from io import BytesIO
 from PIL import Image, UnidentifiedImageError
-from .views import _analyze_clothing_image, _generate_stylist_reply, _visual_items_for_reply
+from .views import _generate_stylist_reply, _visual_items_for_reply
 from wardrobe.models import ClothingItem, OutfitGroup, WishlistItem
 from .ai_multigarment import analyse_and_store, save_multigarment_selection
 
@@ -291,6 +291,9 @@ class AIAnalyzeAPIView(APIView):
             return Response({"detail": "Image must be under 8 MB."}, status=400)
 
         raw = image.read()
+        # IMPORTANT: this is the same shared Vision pipeline used by the
+        # Django website AI Add / Quick Gallery / Wardrobe Scanner. Flutter
+        # never runs a second prompt or a separate garment classifier.
         result = analyse_and_store(raw, request.user.id)
         if result.get("error"):
             return Response(result, status=503 if "AI" in result.get("error", "") else 400)

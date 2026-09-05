@@ -10,101 +10,97 @@
 <body class="detail-page">
 
 <div class="detail-shell">
-
     <a href="{% url 'dashboard' %}" class="back-btn">← Back</a>
 
-    <div class="detail-card glass-card">
-
-        <div class="detail-image-wrap">
+    <div class="detail-card glass-card detail-card-v2">
+        <div class="detail-image-box detail-image-box-v2">
             {% if clothing_item.image %}
                 <img src="{{ clothing_item.image.url }}" alt="{{ clothing_item.name }}">
             {% else %}
                 <img src="{% static 'images/no-image.png' %}" alt="No image">
             {% endif %}
-
             <span class="image-category-badge detail-badge">
                 {{ clothing_item.category }}
             </span>
         </div>
 
-        <div class="detail-content">
-
+        <div class="detail-info-box detail-info-box-v2">
             <h1>{{ clothing_item.name }}</h1>
 
-            <div class="detail-tags">
-                <span>🎨 {{ clothing_item.color }}</span>
+            <div class="detail-meta detail-meta-v2">
+                <span class="plain-meta">🎨 {{ clothing_item.color }}</span>
                 {% if clothing_item.season %}
-                <span>☀️ {{ clothing_item.season }}</span>
+                    <span class="plain-meta">☀️ {{ clothing_item.season }}</span>
                 {% endif %}
                 {% if clothing_item.occasion %}
-                <span>🎉 {{ clothing_item.occasion }}</span>
+                    <span class="plain-meta">🎉 {{ clothing_item.occasion }}</span>
                 {% endif %}
             </div>
 
             {% if clothing_item.aesthetic %}
-            <div class="ai-section">
+            <section class="detail-ai-section">
                 <h3>Aesthetic</h3>
                 <p>{{ clothing_item.aesthetic }}</p>
-            </div>
+            </section>
             {% endif %}
 
             {% if clothing_item.fit_silhouette %}
-            <div class="ai-section">
-                <h3>Fit & Silhouette</h3>
+            <section class="detail-ai-section">
+                <h3>Fit &amp; Silhouette</h3>
                 <p>{{ clothing_item.fit_silhouette }}</p>
-            </div>
+            </section>
             {% endif %}
 
             {% if clothing_item.tags %}
-            <div class="ai-section">
+            <section class="detail-ai-section">
                 <h3>AI Tags</h3>
                 <p>{{ clothing_item.tags }}</p>
-            </div>
+            </section>
             {% endif %}
 
             {% if clothing_item.accessories %}
-            <div class="ai-section">
+            <section class="detail-ai-section">
                 <h3>Suggested Accessories</h3>
                 <p>{{ clothing_item.accessories }}</p>
-            </div>
+            </section>
             {% endif %}
 
             {% if clothing_item.styling_notes %}
-            <div class="ai-section stylist-box">
+            <section class="detail-ai-section detail-stylist-section">
                 <h3>✨ AI Stylist Suggestions</h3>
                 <p>{{ clothing_item.styling_notes }}</p>
-            </div>
+            </section>
             {% endif %}
 
-
-            {% if outfit_group %}
-            <div class="ai-section original-pairing-box">
-                <h3>Originally paired with</h3>
-                <p>This item came from the same uploaded look as the pieces below. Your AI Stylist can still reuse each piece independently.</p>
-                {% if outfit_group.original_image %}
-                    <img src="{{ outfit_group.original_image.url }}" alt="{{ outfit_group.name }}" class="original-look-detail-img">
-                {% endif %}
-                {% if paired_items %}
-                    <div class="paired-items-row">
-                        {% for paired in paired_items %}
-                            <a href="{% url 'clothing_item_detail' paired.id %}" class="paired-item-chip">
-                                {% if paired.image %}<img src="{{ paired.image.url }}" alt="{{ paired.name }}">{% endif %}
-                                <span>{{ paired.name }}</span>
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            {% endif %}
-
-                    <div class="detail-actions">
+            <div class="detail-actions detail-actions-v2">
                 <a href="{% url 'edit_clothing_item' clothing_item.id %}" class="primary-link">Edit Item</a>
                 <a href="{% url 'stylist' %}" class="ghost-link">Ask Stylist</a>
                 <a href="{% url 'delete_clothing_item' clothing_item.id %}" class="ghost-link danger-link">Delete</a>
             </div>
-
         </div>
     </div>
+
+    {% if outfit_group %}
+    <div class="glass-card original-pairing-box detail-original-look-v2">
+        <p class="detail-kicker">ORIGINAL LOOK MEMORY</p>
+        <h2>{{ outfit_group.name|default:"Originally worn together" }}</h2>
+        <p>This item came from the same uploaded look as the pieces below. Your AI Stylist can still reuse each piece independently.</p>
+        {% if outfit_group.original_image %}
+            <img src="{{ outfit_group.original_image.url }}" alt="{{ outfit_group.name }}" class="original-look-detail-img">
+        {% endif %}
+        {% if paired_items %}
+            <h3>Originally paired with</h3>
+            <div class="paired-items-row">
+                {% for paired in paired_items %}
+                    <a href="{% url 'clothing_item_detail' paired.id %}" class="paired-item-chip">
+                        {% if paired.image %}<img src="{{ paired.image.url }}" alt="{{ paired.name }}">{% endif %}
+                        <span>{{ paired.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 
 </body>

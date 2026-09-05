@@ -259,3 +259,36 @@
 .advanced-details summary{cursor:pointer;font-weight:500;margin-bottom:14px;color:var(--ink,#171717)}
 .check-row{display:flex;gap:10px;align-items:flex-start;padding:12px 2px 4px;color:var(--muted,#6f6a63);font-size:.94rem}
 .check-row input{margin-top:3px;width:18px;height:18px;accent-color:var(--yellow,#ffd338)}
+
+/* Website + Flutter aligned clothing detail layout (v2) */
+.detail-card-v2{align-items:start;overflow:hidden}
+.detail-image-box-v2{position:relative;align-self:start}
+.detail-image-box-v2 img{height:min(66vh,610px);object-fit:cover;object-position:top center}
+.detail-info-box-v2{min-width:0;padding:8px 8px 8px 0}
+.detail-info-box-v2 h1{margin:0 0 22px;font-size:clamp(2rem,4vw,3rem);line-height:1.04;letter-spacing:-.045em;font-weight:500;overflow-wrap:anywhere}
+.detail-meta-v2{margin:0 0 4px;gap:14px}
+.detail-meta-v2 .plain-meta{padding:0;border:0;background:transparent;border-radius:0;font-weight:400;white-space:normal}
+.detail-ai-section{margin-top:20px;min-width:0}
+.detail-ai-section h3{margin:0 0 7px;font-size:1.08rem;font-weight:500;line-height:1.25}
+.detail-ai-section p{margin:0;color:#333;line-height:1.48;overflow-wrap:anywhere}
+.detail-stylist-section h3{font-size:1.13rem}
+.detail-actions-v2{margin-top:24px;align-items:center}
+.detail-actions-v2 .danger-link{color:var(--danger)!important;background:#fff!important;border:1px solid rgba(180,35,24,.25)!important}
+.detail-original-look-v2{margin-top:18px;padding:22px;border-radius:28px}
+.detail-original-look-v2 h2{margin:5px 0 8px;font-size:1.45rem;font-weight:500}
+.detail-original-look-v2>p:not(.detail-kicker){margin:0;color:var(--muted);line-height:1.48}
+.detail-kicker{margin:0;color:var(--muted);font-size:.72rem;letter-spacing:.08em}
+@media(max-width:760px){
+  .detail-card-v2{padding:0;gap:0}
+  .detail-image-box-v2{border-radius:0}
+  .detail-image-box-v2 img{height:500px}
+  .detail-info-box-v2{padding:22px 20px 24px}
+  .detail-info-box-v2 h1{font-size:2rem;margin-bottom:18px}
+  .detail-actions-v2 a{width:auto;flex:1 1 150px}
+}
+@media(max-width:430px){
+  .detail-image-box-v2 img{height:440px}
+  .detail-info-box-v2{padding:20px 16px 22px}
+  .detail-info-box-v2 h1{font-size:1.8rem}
+  .detail-actions-v2 a{width:100%;flex-basis:100%}
+}
