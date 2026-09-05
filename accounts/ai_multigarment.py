@@ -322,6 +322,7 @@ def save_multigarment_selection(
     outfit_payload: dict[str, Any] | None,
     save_mode: str = "separate",
     source_type: str = "ai_add",
+    allowed_image_paths: set[str] | None = None,
 ) -> tuple[OutfitGroup | None, list[ClothingItem]]:
     """Persist reviewed pieces and optionally a whole-look card."""
     save_mode = save_mode if save_mode in {"separate", "outfit", "both"} else "separate"
@@ -331,8 +332,16 @@ def save_multigarment_selection(
         raise ValueError("Select at least one detected piece to save.")
 
     # Do not accept arbitrary storage paths from another user's AI session.
+    # New Flutter clients send a server-signed analysis token, which gives us
+    # the exact set of storage paths that were produced during analysis. This
+    # is storage-backend agnostic (Cloudinary may return names that do not
+    # literally start with ``ai_sources/<user>/``). Legacy website/API flows
+    # continue to use the original prefix validation.
     expected_source_prefix = f"ai_sources/{user.id}/"
-    if source_image_path and not source_image_path.startswith(expected_source_prefix):
+    if allowed_image_paths is not None:
+        if source_image_path and source_image_path not in allowed_image_paths:
+            raise ValueError("Invalid AI source image. Please analyse the photo again.")
+    elif source_image_path and not source_image_path.startswith(expected_source_prefix):
         raise ValueError("Invalid AI source image. Please analyse the photo again.")
 
     outfit = _normalise_outfit(outfit_payload or {}, selected or pieces)
@@ -351,7 +360,10 @@ def save_multigarment_selection(
     if save_mode in {"separate", "both"}:
         for index, p in enumerate(selected):
             image_path = p.get("image_path") or source_image_path
-            if image_path and not (
+            if allowed_image_paths is not None:
+                if image_path and image_path not in allowed_image_paths:
+                    image_path = source_image_path
+            elif image_path and not (
                 image_path.startswith(f"ai_piece_crops/{user.id}/")
                 or image_path.startswith(expected_source_prefix)
             ):
